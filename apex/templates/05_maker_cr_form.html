@@ -1,0 +1,279 @@
+<!--
+  TEMPLATE 5: AAML Maker – Change Request Form  (Page 15 / 30)
+  Shows editable form for an ACTIVE client's data sections.
+  Each section has a "Save Section" button that stores changes to EPF_CR_SECTION_CHANGES.
+  A final "Submit to Checker" button sends the entire CR.
+-->
+<style>
+/* ── CR Form Page ─────────────────────────────────────── */
+.epf-cr-form-wrap{padding:0 0 40px;}
+
+.epf-cr-form-header{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  padding:20px 0 16px;border-bottom:2px solid #E2E8F0;margin-bottom:24px;gap:16px;
+}
+.epf-cr-form-header .title{font-size:20px;font-weight:700;color:#1A202C;}
+.epf-cr-form-header .subtitle{font-size:13px;color:#718096;margin-top:4px;}
+
+/* ── CR Info Strip ────────────────────────────────────── */
+.epf-cr-info-strip{
+  background:#EBF4FF;border:1px solid #BEE3F8;border-radius:8px;
+  padding:12px 18px;margin-bottom:24px;display:flex;gap:24px;flex-wrap:wrap;
+  align-items:center;
+}
+.epf-cr-info-strip .info-item{font-size:13px;color:#2C5282;}
+.epf-cr-info-strip .info-item strong{font-weight:700;}
+
+/* ── Section Accordion ────────────────────────────────── */
+.epf-cr-accordion{display:flex;flex-direction:column;gap:16px;margin-bottom:28px;}
+
+.epf-cr-acc-item{
+  background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;
+}
+.epf-cr-acc-header{
+  padding:14px 20px;background:#F7FAFC;border-bottom:1px solid #E2E8F0;
+  display:flex;align-items:center;justify-content:space-between;cursor:pointer;
+}
+.epf-cr-acc-header h4{font-size:14px;font-weight:700;color:#1A202C;margin:0;display:flex;align-items:center;gap:8px;}
+.epf-cr-acc-header .section-saved{
+  display:inline-flex;align-items:center;gap:4px;
+  background:#F0FFF4;color:#276749;border-radius:12px;
+  padding:2px 10px;font-size:11px;font-weight:700;
+}
+.epf-cr-acc-header .chevron{font-size:16px;color:#718096;transition:transform .2s;}
+.epf-cr-acc-item.collapsed .chevron{transform:rotate(-90deg);}
+.epf-cr-acc-body{padding:20px;}
+.epf-cr-acc-item.collapsed .epf-cr-acc-body{display:none;}
+
+/* ── Form Fields ──────────────────────────────────────── */
+.epf-cr-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:16px;
+}
+@media(max-width:640px){.epf-cr-grid{grid-template-columns:1fr;}}
+
+.epf-cr-field{margin-bottom:0;}
+.epf-cr-field.full{grid-column:1/-1;}
+.epf-cr-field label{display:block;font-size:12px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.epf-cr-field .current-val{
+  font-size:12px;color:#A0AEC0;margin-bottom:4px;
+}
+.epf-cr-field .current-val em{font-style:normal;font-weight:600;color:#718096;}
+.epf-cr-field input,.epf-cr-field select,.epf-cr-field textarea{
+  width:100%;border:1px solid #D1D5DB;border-radius:8px;
+  padding:9px 12px;font-size:14px;font-family:inherit;
+  transition:border-color .15s,background .15s;box-sizing:border-box;
+}
+.epf-cr-field input:focus,.epf-cr-field select:focus,.epf-cr-field textarea:focus{
+  outline:none;border-color:#F59E0B;box-shadow:0 0 0 3px rgba(245,158,11,.1);
+  background:#FFFBEB;
+}
+.epf-cr-field input.changed,.epf-cr-field select.changed,.epf-cr-field textarea.changed{
+  border-color:#10B981;background:#F0FFF4;
+}
+
+/* ── Section Actions ──────────────────────────────────── */
+.epf-section-actions{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-top:16px;border-top:1px solid #E2E8F0;margin-top:8px;
+}
+.epf-section-actions .hint{font-size:12px;color:#718096;}
+.epf-btn-save-section{
+  background:#fff;border:2px solid #4F46E5;color:#4F46E5;
+  border-radius:6px;padding:8px 18px;font-size:14px;font-weight:700;cursor:pointer;
+}
+.epf-btn-save-section:hover{background:#EDE9FE;}
+
+/* ── Change Summary Field ─────────────────────────────── */
+.epf-summary-field{margin-top:12px;}
+.epf-summary-field label{font-size:12px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;}
+.epf-summary-field textarea{width:100%;border:1px solid #D1D5DB;border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;resize:vertical;min-height:56px;box-sizing:border-box;}
+.epf-summary-field textarea:focus{outline:none;border-color:#4F46E5;box-shadow:0 0 0 3px rgba(79,70,229,.1);}
+
+/* ── Bottom Submit Bar ────────────────────────────────── */
+.epf-cr-submit-bar{
+  position:sticky;bottom:0;background:#fff;
+  border-top:2px solid #E2E8F0;padding:16px 0;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;z-index:10;
+}
+.epf-cr-submit-bar .hint-text{font-size:13px;color:#718096;}
+.epf-btn-submit-cr{
+  background:#4F46E5;color:#fff;border:none;
+  border-radius:6px;padding:10px 28px;font-size:14px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;gap:8px;
+}
+.epf-btn-submit-cr:hover{background:#4338CA;}
+.epf-btn-submit-cr:disabled{opacity:.5;cursor:not-allowed;}
+</style>
+
+<!-- ── CR Form Page ──────────────────────────────────────────── -->
+<div class="epf-cr-form-wrap">
+
+  <div class="epf-cr-form-header">
+    <div>
+      <div class="title">Raise Change Request</div>
+      <div class="subtitle">
+        Editing live data for <strong>&P_CR_COMPANY_NAME.</strong> –
+        changes will not apply until AAML Checker approves.
+      </div>
+    </div>
+    <a href="f?p=&APP_ID.:14:&SESSION.:::::P14_COMPANY_ID:&P_COMPANY_ID." class="epf-btn-back">← Back to Client</a>
+  </div>
+
+  <!-- CR Info Strip -->
+  <div class="epf-cr-info-strip">
+    <div class="info-item">📋 CR Ref: <strong>&P_CR_REF_NO.</strong></div>
+    <div class="info-item">📅 Started: <strong>&P_CR_STARTED_DATE.</strong></div>
+    <div class="info-item">Status: <strong>&P_CR_STATUS_NAME.</strong></div>
+  </div>
+
+  <!-- Accordion Sections -->
+  <div class="epf-cr-accordion">
+
+    <!-- ── Section 1: Account Details ──────────────────────── -->
+    <div class="epf-cr-acc-item" id="acc-account">
+      <div class="epf-cr-acc-header" onclick="epfToggleAcc('acc-account')">
+        <h4>
+          Account Details
+          <span class="section-saved" id="saved-account" style="display:none">✓ Saved</span>
+        </h4>
+        <span class="chevron">▾</span>
+      </div>
+      <div class="epf-cr-acc-body">
+        <div class="epf-cr-grid">
+          <div class="epf-cr-field">
+            <label>Company Name</label>
+            <div class="current-val">Current: <em>&P_CURR_COMPANY_NAME.</em></div>
+            <input type="text" id="cr-company-name" name="P_CR_COMPANY_NAME" value="&P_CURR_COMPANY_NAME." oninput="epfMarkChanged(this,'P_CURR_COMPANY_NAME')">
+          </div>
+          <div class="epf-cr-field">
+            <label>Company Code</label>
+            <div class="current-val">Current: <em>&P_CURR_COMPANY_CODE.</em></div>
+            <input type="text" id="cr-company-code" name="P_CR_COMPANY_CODE" value="&P_CURR_COMPANY_CODE." oninput="epfMarkChanged(this,'P_CURR_COMPANY_CODE')">
+          </div>
+          <div class="epf-cr-field">
+            <label>NTN</label>
+            <div class="current-val">Current: <em>&P_CURR_NTN.</em></div>
+            <input type="text" id="cr-ntn" name="P_CR_NTN" value="&P_CURR_NTN." oninput="epfMarkChanged(this,'P_CURR_NTN')">
+          </div>
+          <div class="epf-cr-field">
+            <label>City</label>
+            <div class="current-val">Current: <em>&P_CURR_CITY.</em></div>
+            <input type="text" id="cr-city" name="P_CR_CITY" value="&P_CURR_CITY." oninput="epfMarkChanged(this,'P_CURR_CITY')">
+          </div>
+          <div class="epf-cr-field">
+            <label>Contact Email</label>
+            <div class="current-val">Current: <em>&P_CURR_CONTACT_EMAIL.</em></div>
+            <input type="email" id="cr-contact-email" name="P_CR_CONTACT_EMAIL" value="&P_CURR_CONTACT_EMAIL." oninput="epfMarkChanged(this,'P_CURR_CONTACT_EMAIL')">
+          </div>
+          <div class="epf-cr-field">
+            <label>Contact Phone</label>
+            <div class="current-val">Current: <em>&P_CURR_CONTACT_PHONE.</em></div>
+            <input type="text" id="cr-contact-phone" name="P_CR_CONTACT_PHONE" value="&P_CURR_CONTACT_PHONE." oninput="epfMarkChanged(this,'P_CURR_CONTACT_PHONE')">
+          </div>
+          <div class="epf-cr-field full">
+            <label>Address</label>
+            <div class="current-val">Current: <em>&P_CURR_ADDRESS.</em></div>
+            <textarea id="cr-address" name="P_CR_ADDRESS" rows="2" oninput="epfMarkChanged(this,'P_CURR_ADDRESS')">&P_CURR_ADDRESS.</textarea>
+          </div>
+        </div>
+        <div class="epf-summary-field">
+          <label>Change Summary (optional)</label>
+          <textarea id="cr-account-summary" name="P_ACCOUNT_CHANGE_SUMMARY" placeholder="Briefly describe what changed and why…"></textarea>
+        </div>
+        <div class="epf-section-actions">
+          <span class="hint">Changes are saved per section. You can edit multiple sections before submitting.</span>
+          <button class="epf-btn-save-section" onclick="apex.submit('SAVE_ACCOUNT_SECTION')">Save Section</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Section 2: Fund & Settings ──────────────────────── -->
+    <div class="epf-cr-acc-item" id="acc-settings">
+      <div class="epf-cr-acc-header" onclick="epfToggleAcc('acc-settings')">
+        <h4>
+          Fund &amp; Contribution Settings
+          <span class="section-saved" id="saved-settings" style="display:none">✓ Saved</span>
+        </h4>
+        <span class="chevron">▾</span>
+      </div>
+      <div class="epf-cr-acc-body">
+        <div class="epf-cr-grid">
+          <div class="epf-cr-field">
+            <label>Employee Contribution %</label>
+            <div class="current-val">Current: <em>&P_CURR_CONTRIB_PCT.%</em></div>
+            <input type="number" name="P_CR_CONTRIB_PCT" value="&P_CURR_CONTRIB_PCT." min="0" max="100" step="0.01" oninput="epfMarkChanged(this,'P_CURR_CONTRIB_PCT')">
+          </div>
+          <div class="epf-cr-field">
+            <label>Employer Contribution %</label>
+            <div class="current-val">Current: <em>&P_CURR_EMPLOYER_PCT.%</em></div>
+            <input type="number" name="P_CR_EMPLOYER_PCT" value="&P_CURR_EMPLOYER_PCT." min="0" max="100" step="0.01" oninput="epfMarkChanged(this,'P_CURR_EMPLOYER_PCT')">
+          </div>
+          <div class="epf-cr-field">
+            <label>Vesting Period (Months)</label>
+            <div class="current-val">Current: <em>&P_CURR_VESTING_MONTHS.</em></div>
+            <input type="number" name="P_CR_VESTING_MONTHS" value="&P_CURR_VESTING_MONTHS." min="0" oninput="epfMarkChanged(this,'P_CURR_VESTING_MONTHS')">
+          </div>
+          <div class="epf-cr-field">
+            <label>Min Contribution (PKR)</label>
+            <div class="current-val">Current: <em>&P_CURR_MIN_CONTRIB.</em></div>
+            <input type="number" name="P_CR_MIN_CONTRIB" value="&P_CURR_MIN_CONTRIB." min="0" oninput="epfMarkChanged(this,'P_CURR_MIN_CONTRIB')">
+          </div>
+          <div class="epf-cr-field">
+            <label>Max Contribution (PKR)</label>
+            <div class="current-val">Current: <em>&P_CURR_MAX_CONTRIB.</em></div>
+            <input type="number" name="P_CR_MAX_CONTRIB" value="&P_CURR_MAX_CONTRIB." min="0" oninput="epfMarkChanged(this,'P_CURR_MAX_CONTRIB')">
+          </div>
+        </div>
+        <div class="epf-summary-field">
+          <label>Change Summary (optional)</label>
+          <textarea name="P_SETTINGS_CHANGE_SUMMARY" placeholder="Briefly describe what changed and why…"></textarea>
+        </div>
+        <div class="epf-section-actions">
+          <span class="hint">Save this section before moving to the next.</span>
+          <button class="epf-btn-save-section" onclick="apex.submit('SAVE_SETTINGS_SECTION')">Save Section</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /accordion -->
+
+  <!-- ── Submit Bar ─────────────────────────────────────────── -->
+  <div class="epf-cr-submit-bar">
+    <span class="hint-text">Save at least one section before submitting for checker review.</span>
+    <div style="display:flex;gap:10px;">
+      <a href="f?p=&APP_ID.:14:&SESSION.:::::P14_COMPANY_ID:&P_COMPANY_ID." class="epf-btn-back">Discard</a>
+      <button class="epf-btn-submit-cr" id="btnSubmitCR" onclick="apex.submit('SUBMIT_CR')">
+        Submit to Checker →
+      </button>
+    </div>
+  </div>
+
+</div><!-- /epf-cr-form-wrap -->
+
+<script>
+function epfToggleAcc(id) {
+    document.getElementById(id).classList.toggle('collapsed');
+}
+
+/* Highlight field green when changed from original */
+function epfMarkChanged(input, origItemId) {
+    var origVal = apex.item(origItemId) ? apex.item(origItemId).getValue() : '';
+    if (input.value !== origVal) {
+        input.classList.add('changed');
+    } else {
+        input.classList.remove('changed');
+    }
+}
+
+/* Mark section as saved (call after successful AJAX save) */
+function epfMarkSectionSaved(sectionCode) {
+    var el = document.getElementById('saved-' + sectionCode.toLowerCase());
+    if (el) el.style.display = 'inline-flex';
+}
+
+/* Show success message if sections were saved this load */
+(function(){
+    // On page load after save, APEX sets the success message — no extra logic needed.
+})();
+</script>
