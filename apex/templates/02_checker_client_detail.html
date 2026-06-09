@@ -1,0 +1,248 @@
+<!--
+  TEMPLATE 2: AAML Checker – Client Detail Review (Page 22)
+  4-section tabbed view: Account | Settings | Users | Groups
+  Place this HTML in a Static Content region above the detail sections.
+  Each section loads via IR or Classic Report regions.
+-->
+<style>
+/* ── Review Page Layout ───────────────────────────────── */
+.epf-review-wrap{padding:0 0 40px;}
+
+.epf-review-header{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  padding:20px 0 16px;border-bottom:2px solid #E2E8F0;margin-bottom:24px;
+  gap:16px;
+}
+.epf-review-header .left .page-title{
+  font-size:20px;font-weight:700;color:#1A202C;
+}
+.epf-review-header .left .meta{
+  font-size:13px;color:#718096;margin-top:4px;
+  display:flex;gap:16px;flex-wrap:wrap;
+}
+.epf-review-header .left .meta span{display:flex;align-items:center;gap:4px;}
+.epf-review-header .actions{display:flex;gap:10px;flex-shrink:0;}
+
+/* ── Submission Status Banner ─────────────────────────── */
+.epf-status-banner{
+  border-radius:8px;padding:14px 18px;margin-bottom:24px;
+  display:flex;align-items:center;gap:12px;
+  border:1px solid;
+}
+.epf-status-banner.pending{background:#EBF4FF;border-color:#BEE3F8;color:#2C5282;}
+.epf-status-banner.reverted{background:#FFF5F5;border-color:#FEB2B2;color:#742A2A;}
+.epf-status-banner .banner-icon{font-size:20px;}
+.epf-status-banner .banner-text strong{display:block;font-weight:700;}
+.epf-status-banner .banner-text span{font-size:13px;opacity:.8;}
+
+/* ── Section Tabs ─────────────────────────────────────── */
+.epf-section-tabs{
+  display:flex;gap:0;border-bottom:2px solid #E2E8F0;margin-bottom:24px;overflow-x:auto;
+}
+.epf-section-tab{
+  padding:10px 20px;font-size:14px;font-weight:600;color:#718096;
+  cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;
+  white-space:nowrap;transition:color .15s,border-color .15s;user-select:none;
+}
+.epf-section-tab:hover{color:#4F46E5;}
+.epf-section-tab.active{color:#4F46E5;border-bottom-color:#4F46E5;}
+.epf-section-tab .tab-dot{
+  display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:#CBD5E0;margin-left:6px;vertical-align:middle;
+}
+.epf-section-tab.complete .tab-dot{background:#10B981;}
+
+/* ── Section Panel ────────────────────────────────────── */
+.epf-section-panel{display:none;}
+.epf-section-panel.active{display:block;}
+
+/* ── Detail Card ──────────────────────────────────────── */
+.epf-detail-card{
+  background:#fff;border:1px solid #E2E8F0;border-radius:10px;
+  overflow:hidden;margin-bottom:20px;
+}
+.epf-detail-card-header{
+  padding:14px 20px;background:#F7FAFC;border-bottom:1px solid #E2E8F0;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.epf-detail-card-header h4{font-size:14px;font-weight:700;color:#1A202C;margin:0;}
+
+.epf-detail-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:0;
+}
+@media(max-width:640px){.epf-detail-grid{grid-template-columns:1fr;}}
+.epf-detail-item{
+  padding:14px 20px;border-bottom:1px solid #F0F0F0;
+}
+.epf-detail-item:nth-child(odd){border-right:1px solid #F0F0F0;}
+.epf-detail-item .di-label{font-size:11px;font-weight:600;color:#718096;text-transform:uppercase;letter-spacing:.5px;}
+.epf-detail-item .di-value{font-size:14px;color:#1A202C;margin-top:3px;word-break:break-word;}
+
+/* ── Bottom Action Bar ────────────────────────────────── */
+.epf-action-bar{
+  position:sticky;bottom:0;background:#fff;border-top:2px solid #E2E8F0;
+  padding:16px 0;display:flex;align-items:center;justify-content:flex-end;
+  gap:12px;z-index:10;margin-top:32px;
+}
+.epf-btn-back{
+  background:#fff;border:1px solid #D1D5DB;color:#374151;
+  border-radius:6px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;
+  text-decoration:none;
+}
+.epf-btn-back:hover{background:#F3F4F6;}
+.epf-btn-approve-lg{
+  background:#10B981;color:#fff;border:none;
+  border-radius:6px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;gap:8px;
+}
+.epf-btn-approve-lg:hover{background:#059669;}
+.epf-btn-revert-lg{
+  background:#fff;border:2px solid #EF4444;color:#EF4444;
+  border-radius:6px;padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;
+}
+.epf-btn-revert-lg:hover{background:#FFF5F5;}
+
+/* ── User / Group Table Inside Panel ─────────────────── */
+.epf-mini-table{width:100%;border-collapse:collapse;}
+.epf-mini-table th{
+  background:#F7FAFC;padding:10px 14px;text-align:left;
+  font-size:12px;font-weight:600;color:#718096;text-transform:uppercase;
+  letter-spacing:.5px;border-bottom:1px solid #E2E8F0;
+}
+.epf-mini-table td{
+  padding:12px 14px;font-size:13px;color:#374151;
+  border-bottom:1px solid #F0F4F8;
+}
+.epf-mini-table tr:last-child td{border-bottom:none;}
+.epf-mini-table tr:hover td{background:#F7FAFC;}
+
+/* ── Remarks box in review ────────────────────────────── */
+.epf-checker-remarks-box{
+  background:#FFFBEB;border:1px solid #FCD34D;border-radius:8px;
+  padding:14px 18px;margin-bottom:20px;display:none;
+}
+.epf-checker-remarks-box.has-remarks{display:block;}
+.epf-checker-remarks-box .remark-label{
+  font-size:12px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;
+}
+.epf-checker-remarks-box .remark-text{font-size:14px;color:#78350F;}
+</style>
+
+<!-- ── Review Page Header ───────────────────────────────────── -->
+<div class="epf-review-wrap">
+
+  <div class="epf-review-header">
+    <div class="left">
+      <div class="page-title">Review: &P22_COMPANY_NAME.</div>
+      <div class="meta">
+        <span>📋 Ref: <strong>&P22_SUBMISSION_REF_NO.</strong></span>
+        <span>📅 Submitted: <strong>&P22_SUBMITTED_DATE.</strong></span>
+        <span>👤 By: <strong>&P22_SUBMITTED_BY_NAME.</strong></span>
+      </div>
+    </div>
+    <div class="actions">
+      <a href="f?p=&APP_ID.:20:&SESSION." class="epf-btn-back">← Back to Queue</a>
+    </div>
+  </div>
+
+  <!-- Status Banner -->
+  <div class="epf-status-banner pending" id="statusBanner">
+    <span class="banner-icon">⏳</span>
+    <div class="banner-text">
+      <strong>Pending Your Review</strong>
+      <span>Please review all four sections before approving or reverting.</span>
+    </div>
+  </div>
+
+  <!-- Previous Checker Remarks (shown if reverted before) -->
+  <div class="epf-checker-remarks-box" id="prevRemarksBox">
+    <div class="remark-label">Previous Checker Remarks</div>
+    <div class="remark-text" id="prevRemarksText">&P22_CHECKER_REMARKS.</div>
+  </div>
+
+  <!-- Section Tabs -->
+  <div class="epf-section-tabs">
+    <div class="epf-section-tab active complete" data-tab="tab-account"   onclick="epfShowTab(this,'tab-account')">  Account Details   <span class="tab-dot"></span></div>
+    <div class="epf-section-tab complete"        data-tab="tab-settings"  onclick="epfShowTab(this,'tab-settings')"> Fund & Settings    <span class="tab-dot"></span></div>
+    <div class="epf-section-tab complete"        data-tab="tab-users"     onclick="epfShowTab(this,'tab-users')">    Users / Roles      <span class="tab-dot"></span></div>
+    <div class="epf-section-tab complete"        data-tab="tab-groups"    onclick="epfShowTab(this,'tab-groups')">   Auth Groups        <span class="tab-dot"></span></div>
+    <div class="epf-section-tab"                 data-tab="tab-employees" onclick="epfShowTab(this,'tab-employees')">Employees          <span class="tab-dot"></span></div>
+  </div>
+
+  <!-- ── Tab: Account Details ──────────────────────────────── -->
+  <div class="epf-section-panel active" id="tab-account">
+    <div class="epf-detail-card">
+      <div class="epf-detail-card-header"><h4>Company Information</h4></div>
+      <div class="epf-detail-grid">
+        <div class="epf-detail-item"><div class="di-label">Company Name</div><div class="di-value">&P22_COMPANY_NAME.</div></div>
+        <div class="epf-detail-item"><div class="di-label">Company Code</div><div class="di-value">&P22_COMPANY_CODE.</div></div>
+        <div class="epf-detail-item"><div class="di-label">NTN</div><div class="di-value">&P22_NTN.</div></div>
+        <div class="epf-detail-item"><div class="di-label">City</div><div class="di-value">&P22_CITY.</div></div>
+        <div class="epf-detail-item"><div class="di-label">Contact Email</div><div class="di-value">&P22_CONTACT_EMAIL.</div></div>
+        <div class="epf-detail-item"><div class="di-label">Contact Phone</div><div class="di-value">&P22_CONTACT_PHONE.</div></div>
+        <div class="epf-detail-item" style="grid-column:1/-1"><div class="di-label">Address</div><div class="di-value">&P22_ADDRESS.</div></div>
+        <div class="epf-detail-item"><div class="di-label">Company Group</div><div class="di-value">&P22_GROUP_NAME.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tab: Fund & Settings ──────────────────────────────── -->
+  <div class="epf-section-panel" id="tab-settings">
+    <div class="epf-detail-card">
+      <div class="epf-detail-card-header"><h4>Contribution & Fund Settings</h4></div>
+      <div class="epf-detail-grid">
+        <div class="epf-detail-item"><div class="di-label">Employee Contribution %</div><div class="di-value">&P22_CONTRIBUTION_PCT.%</div></div>
+        <div class="epf-detail-item"><div class="di-label">Employer Contribution %</div><div class="di-value">&P22_EMPLOYER_PCT.%</div></div>
+        <div class="epf-detail-item"><div class="di-label">Vesting Period (Months)</div><div class="di-value">&P22_VESTING_MONTHS.</div></div>
+        <div class="epf-detail-item"><div class="di-label">Min Contribution (PKR)</div><div class="di-value">&P22_MIN_CONTRIBUTION.</div></div>
+        <div class="epf-detail-item"><div class="di-label">Max Contribution (PKR)</div><div class="di-value">&P22_MAX_CONTRIBUTION.</div></div>
+        <div class="epf-detail-item"><div class="di-label">Selected Funds</div><div class="di-value">&P22_FUND_NAMES.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tab: Users / Roles (IR region renders here via APEX) ── -->
+  <div class="epf-section-panel" id="tab-users">
+    <!-- APEX IR region with Static ID "users-review-ir" goes here -->
+  </div>
+
+  <!-- ── Tab: Authorizer Groups (IR region renders here) ─────── -->
+  <div class="epf-section-panel" id="tab-groups">
+    <!-- APEX IR region with Static ID "groups-review-ir" goes here -->
+  </div>
+
+  <!-- ── Tab: Employees staging summary ──────────────────────── -->
+  <div class="epf-section-panel" id="tab-employees">
+    <!-- APEX IR region with Static ID "employees-review-ir" goes here -->
+  </div>
+
+  <!-- ── Sticky Action Bar ───────────────────────────────────── -->
+  <div class="epf-action-bar">
+    <a href="f?p=&APP_ID.:20:&SESSION." class="epf-btn-back">Cancel</a>
+    <button class="epf-btn-revert-lg"  onclick="epfOpenRevert(&P22_COMPANY_ID., 'ONBOARDING', '&P22_COMPANY_NAME.', '&P22_SUBMISSION_REF_NO.')">
+      ↩ Revert to Maker
+    </button>
+    <button class="epf-btn-approve-lg" onclick="epfOpenApprove(&P22_COMPANY_ID., 'ONBOARDING', '&P22_COMPANY_NAME.', '&P22_SUBMISSION_REF_NO.')">
+      ✓ Approve &amp; Activate
+    </button>
+  </div>
+
+</div><!-- /epf-review-wrap -->
+
+<script>
+/* Tab switching */
+function epfShowTab(el, tabId) {
+    document.querySelectorAll('.epf-section-tab').forEach(function(t){ t.classList.remove('active'); });
+    document.querySelectorAll('.epf-section-panel').forEach(function(p){ p.classList.remove('active'); });
+    el.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+}
+
+/* Show previous remarks banner if remarks exist */
+(function(){
+    var r = document.getElementById('prevRemarksText');
+    if (r && r.textContent.trim()) {
+        document.getElementById('prevRemarksBox').classList.add('has-remarks');
+    }
+})();
+</script>

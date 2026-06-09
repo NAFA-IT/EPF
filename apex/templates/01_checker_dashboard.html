@@ -1,0 +1,349 @@
+<!--
+  TEMPLATE 1: AAML Checker – Pending Review Dashboard
+  Usage: Paste into APEX Static Region "HTML" above the IR region (Page 20)
+  The IR query populates #CHECKER_DASHBOARD_IR# substitution below.
+  Stats are driven by a Before-Header computation or separate queries.
+-->
+
+<!-- ── Static CSS (add once to page Inline CSS or Universal Theme CSS) ── -->
+<style>
+/* ── Checker Wrap ─────────────────────────────────────── */
+.epf-checker-wrap{padding:0 0 32px;}
+
+/* ── Toolbar ──────────────────────────────────────────── */
+.epf-checker-toolbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 0 16px;border-bottom:2px solid #E2E8F0;margin-bottom:24px;
+}
+.epf-checker-toolbar .page-title{
+  font-size:22px;font-weight:700;color:#1A202C;letter-spacing:-.3px;
+}
+.epf-checker-toolbar .page-title span{
+  display:block;font-size:13px;font-weight:400;color:#718096;margin-top:2px;
+}
+
+/* ── Stat Row ─────────────────────────────────────────── */
+.epf-stat-row{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;
+}
+@media(max-width:768px){.epf-stat-row{grid-template-columns:1fr;}}
+
+.epf-stat-card{
+  background:#fff;border:1px solid #E2E8F0;border-radius:10px;
+  padding:20px 24px;position:relative;overflow:hidden;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);transition:box-shadow .2s;
+}
+.epf-stat-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.1);}
+.epf-stat-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:10px 0 0 10px;
+}
+.epf-stat-card.new-clients::before{background:#4F46E5;}
+.epf-stat-card.change-reqs::before{background:#F59E0B;}
+.epf-stat-card.reverted::before{background:#EF4444;}
+
+.epf-stat-card .label{font-size:12px;font-weight:600;color:#718096;text-transform:uppercase;letter-spacing:.6px;}
+.epf-stat-card .value{font-size:28px;font-weight:800;color:#1A202C;margin:6px 0 2px;line-height:1;}
+.epf-stat-card .sub  {font-size:12px;color:#718096;margin-top:2px;}
+.epf-stat-card .icon {
+  position:absolute;right:20px;top:50%;transform:translateY(-50%);
+  font-size:36px;opacity:.1;
+}
+
+/* ── Pending Table Wrapper ────────────────────────────── */
+.epf-pending-wrap{background:#fff;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;}
+.epf-pending-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;border-bottom:1px solid #E2E8F0;background:#F7FAFC;
+}
+.epf-pending-header h3{font-size:15px;font-weight:700;color:#1A202C;margin:0;}
+.epf-pending-header .badge-count{
+  background:#EBF4FF;color:#2B6CB0;border-radius:12px;
+  padding:3px 10px;font-size:12px;font-weight:700;
+}
+
+/* ── Type Badges ─────────────────────────────────────── */
+.epf-type-badge{
+  display:inline-block;padding:3px 10px;border-radius:12px;
+  font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
+}
+.epf-type-badge.onboarding{background:#EDE9FE;color:#5B21B6;}
+.epf-type-badge.change-request{background:#FEF3C7;color:#92400E;}
+
+/* ── Action Buttons ──────────────────────────────────── */
+.epf-btn-review{
+  display:inline-flex;align-items:center;gap:6px;
+  background:#4F46E5;color:#fff;border:none;border-radius:6px;
+  padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;
+  text-decoration:none;transition:background .15s;
+}
+.epf-btn-review:hover{background:#4338CA;color:#fff;}
+
+/* ── Modal Overlay ───────────────────────────────────── */
+.epf-modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);
+  display:none;align-items:center;justify-content:center;z-index:9999;
+}
+.epf-modal-overlay.active{display:flex;}
+.epf-modal{
+  background:#fff;border-radius:12px;width:520px;max-width:95vw;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;
+  animation:epf-slide-up .2s ease-out;
+}
+@keyframes epf-slide-up{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+
+.epf-modal-header{
+  padding:20px 24px;border-bottom:1px solid #E2E8F0;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.epf-modal-header h4{font-size:17px;font-weight:700;color:#1A202C;margin:0;}
+.epf-modal-header .close-btn{
+  background:none;border:none;cursor:pointer;font-size:20px;
+  color:#718096;line-height:1;padding:0;
+}
+.epf-modal-header .close-btn:hover{color:#1A202C;}
+
+.epf-modal-body{padding:24px;}
+.epf-modal-body .company-info{
+  background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;
+  padding:14px 16px;margin-bottom:20px;
+}
+.epf-modal-body .company-info .cname{font-size:15px;font-weight:700;color:#1A202C;}
+.epf-modal-body .company-info .cref{font-size:12px;color:#718096;margin-top:2px;}
+
+.epf-modal-body label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;}
+.epf-modal-body label .req{color:#EF4444;}
+.epf-modal-body textarea{
+  width:100%;border:1px solid #D1D5DB;border-radius:8px;
+  padding:10px 12px;font-size:14px;resize:vertical;min-height:90px;
+  font-family:inherit;transition:border-color .15s;
+}
+.epf-modal-body textarea:focus{outline:none;border-color:#4F46E5;box-shadow:0 0 0 3px rgba(79,70,229,.1);}
+.epf-modal-body .char-count{font-size:11px;color:#718096;text-align:right;margin-top:4px;}
+.epf-field-error{font-size:12px;color:#EF4444;margin-top:4px;display:none;}
+
+.epf-modal-footer{
+  padding:16px 24px;border-top:1px solid #E2E8F0;
+  display:flex;gap:10px;justify-content:flex-end;background:#F9FAFB;
+}
+.epf-btn-cancel{
+  background:#fff;border:1px solid #D1D5DB;color:#374151;
+  border-radius:6px;padding:8px 18px;font-size:14px;font-weight:600;cursor:pointer;
+}
+.epf-btn-cancel:hover{background:#F3F4F6;}
+.epf-btn-approve{
+  background:#10B981;color:#fff;border:none;
+  border-radius:6px;padding:8px 20px;font-size:14px;font-weight:600;cursor:pointer;
+}
+.epf-btn-approve:hover{background:#059669;}
+.epf-btn-revert{
+  background:#EF4444;color:#fff;border:none;
+  border-radius:6px;padding:8px 20px;font-size:14px;font-weight:600;cursor:pointer;
+}
+.epf-btn-revert:hover{background:#DC2626;}
+.epf-btn-revert:disabled,.epf-btn-approve:disabled{opacity:.5;cursor:not-allowed;}
+</style>
+
+<!-- ── Dashboard Header ─────────────────────────────────────── -->
+<div class="epf-checker-wrap">
+  <div class="epf-checker-toolbar">
+    <div class="page-title">
+      Checker Review Queue
+      <span>Review and action pending onboarding submissions and change requests</span>
+    </div>
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="epf-stat-row">
+    <div class="epf-stat-card new-clients">
+      <div class="label">New Clients Pending</div>
+      <div class="value" id="stat-new-clients">
+        &STAT_NEW_CLIENTS.
+      </div>
+      <div class="sub">Onboarding submissions</div>
+      <span class="icon">🏢</span>
+    </div>
+    <div class="epf-stat-card change-reqs">
+      <div class="label">Change Requests Pending</div>
+      <div class="value" id="stat-change-reqs">
+        &STAT_CHANGE_REQS.
+      </div>
+      <div class="sub">Maker-submitted CRs</div>
+      <span class="icon">📝</span>
+    </div>
+    <div class="epf-stat-card reverted">
+      <div class="label">Reverted This Month</div>
+      <div class="value" id="stat-reverted">
+        &STAT_REVERTED.
+      </div>
+      <div class="sub">Sent back for corrections</div>
+      <span class="icon">↩️</span>
+    </div>
+  </div>
+
+  <!-- Pending list header (IR region renders below this) -->
+  <div class="epf-pending-wrap">
+    <div class="epf-pending-header">
+      <h3>Pending Review</h3>
+      <span class="badge-count" id="pending-count">&STAT_TOTAL_PENDING. items</span>
+    </div>
+    <!-- APEX IR replaces this comment -->
+  </div>
+</div>
+
+<!-- ══ Approve Modal ══════════════════════════════════════════ -->
+<div class="epf-modal-overlay" id="approveModal">
+  <div class="epf-modal">
+    <div class="epf-modal-header">
+      <h4>✅ Approve Submission</h4>
+      <button class="close-btn" onclick="epfCloseModal('approveModal')">✕</button>
+    </div>
+    <div class="epf-modal-body">
+      <div class="company-info">
+        <div class="cname" id="approve-company-name">—</div>
+        <div class="cref" id="approve-ref-no">—</div>
+      </div>
+      <label>Remarks <span style="color:#718096;font-weight:400">(optional)</span></label>
+      <textarea id="approve-remarks" placeholder="Add any approval remarks…" maxlength="2000"></textarea>
+      <div class="char-count"><span id="approve-char">0</span>/2000</div>
+    </div>
+    <div class="epf-modal-footer">
+      <button class="epf-btn-cancel" onclick="epfCloseModal('approveModal')">Cancel</button>
+      <button class="epf-btn-approve" id="btnConfirmApprove" onclick="epfConfirmApprove()">Approve</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Revert Modal ═══════════════════════════════════════════ -->
+<div class="epf-modal-overlay" id="revertModal">
+  <div class="epf-modal">
+    <div class="epf-modal-header">
+      <h4>↩️ Revert to Maker</h4>
+      <button class="close-btn" onclick="epfCloseModal('revertModal')">✕</button>
+    </div>
+    <div class="epf-modal-body">
+      <div class="company-info">
+        <div class="cname" id="revert-company-name">—</div>
+        <div class="cref" id="revert-ref-no">—</div>
+      </div>
+      <label>Remarks <span class="req">*</span></label>
+      <textarea id="revert-remarks" placeholder="Explain what needs to be corrected…" maxlength="2000"
+                oninput="epfRevertRemarksChanged()"></textarea>
+      <div class="char-count"><span id="revert-char">0</span>/2000</div>
+      <div class="epf-field-error" id="revert-remarks-error">Revert remarks are mandatory.</div>
+    </div>
+    <div class="epf-modal-footer">
+      <button class="epf-btn-cancel" onclick="epfCloseModal('revertModal')">Cancel</button>
+      <button class="epf-btn-revert" id="btnConfirmRevert" disabled onclick="epfConfirmRevert()">Revert</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var _epfCurrentItem = {};
+
+/* ── Open Approve Modal ───────────────────────────────── */
+function epfOpenApprove(itemId, itemType, companyName, refNo) {
+    _epfCurrentItem = {id: itemId, type: itemType};
+    document.getElementById('approve-company-name').textContent = companyName;
+    document.getElementById('approve-ref-no').textContent = refNo;
+    document.getElementById('approve-remarks').value = '';
+    document.getElementById('approve-char').textContent = '0';
+    document.getElementById('approveModal').classList.add('active');
+}
+
+/* ── Open Revert Modal ────────────────────────────────── */
+function epfOpenRevert(itemId, itemType, companyName, refNo) {
+    _epfCurrentItem = {id: itemId, type: itemType};
+    document.getElementById('revert-company-name').textContent = companyName;
+    document.getElementById('revert-ref-no').textContent = refNo;
+    document.getElementById('revert-remarks').value = '';
+    document.getElementById('revert-char').textContent = '0';
+    document.getElementById('revert-remarks-error').style.display = 'none';
+    document.getElementById('btnConfirmRevert').disabled = true;
+    document.getElementById('revertModal').classList.add('active');
+}
+
+function epfCloseModal(id) {
+    document.getElementById(id).classList.remove('active');
+}
+
+function epfRevertRemarksChanged() {
+    var val = document.getElementById('revert-remarks').value.trim();
+    document.getElementById('revert-char').textContent = val.length;
+    document.getElementById('btnConfirmRevert').disabled = val.length === 0;
+    document.getElementById('revert-remarks-error').style.display = val.length === 0 ? 'block' : 'none';
+}
+
+/* ── Confirm Approve (AJAX call) ─────────────────────── */
+function epfConfirmApprove() {
+    var remarks = document.getElementById('approve-remarks').value;
+    var btn = document.getElementById('btnConfirmApprove');
+    btn.disabled = true; btn.textContent = 'Processing…';
+
+    var processName = _epfCurrentItem.type === 'ONBOARDING'
+        ? 'CHECKER_APPROVE_AJAX' : 'CR_CHECKER_APPROVE_AJAX';
+
+    apex.server.process(processName, {
+        x01: _epfCurrentItem.id,
+        x02: remarks
+    }, {
+        success: function(data) {
+            epfCloseModal('approveModal');
+            if (data.success === 'Y') {
+                apex.message.showPageSuccess(data.message);
+                apex.region('checker-dashboard-ir').refresh();
+            } else {
+                apex.message.showErrors([{type:'error',location:'page',message:data.message}]);
+            }
+            btn.disabled = false; btn.textContent = 'Approve';
+        },
+        error: function() {
+            btn.disabled = false; btn.textContent = 'Approve';
+            apex.message.showErrors([{type:'error',location:'page',message:'Unexpected error. Please try again.'}]);
+        }
+    });
+}
+
+/* ── Confirm Revert (AJAX call) ──────────────────────── */
+function epfConfirmRevert() {
+    var remarks = document.getElementById('revert-remarks').value.trim();
+    if (!remarks) { document.getElementById('revert-remarks-error').style.display='block'; return; }
+
+    var btn = document.getElementById('btnConfirmRevert');
+    btn.disabled = true; btn.textContent = 'Processing…';
+
+    var processName = _epfCurrentItem.type === 'ONBOARDING'
+        ? 'CHECKER_REVERT_AJAX' : 'CR_CHECKER_REVERT_AJAX';
+
+    apex.server.process(processName, {
+        x01: _epfCurrentItem.id,
+        x02: remarks
+    }, {
+        success: function(data) {
+            epfCloseModal('revertModal');
+            if (data.success === 'Y') {
+                apex.message.showPageSuccess(data.message);
+                apex.region('checker-dashboard-ir').refresh();
+            } else {
+                apex.message.showErrors([{type:'error',location:'page',message:data.message}]);
+            }
+            btn.disabled = false; btn.textContent = 'Revert';
+        },
+        error: function() {
+            btn.disabled = false; btn.textContent = 'Revert';
+        }
+    });
+}
+
+/* ── Char counter for approve remarks ────────────────── */
+document.getElementById('approve-remarks').addEventListener('input', function() {
+    document.getElementById('approve-char').textContent = this.value.length;
+});
+
+/* ── Close modal on overlay click ────────────────────── */
+document.querySelectorAll('.epf-modal-overlay').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+        if (e.target === el) el.classList.remove('active');
+    });
+});
+</script>

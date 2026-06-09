@@ -1,0 +1,317 @@
+<!--
+  TEMPLATE 3: AAML Maker – Tab 3: Authorizer Groups
+  Add this HTML to a Static Content region at the top of the Tab 3 page.
+  The "Add / Edit Group" modal contains the form. The IR below shows existing groups.
+-->
+<style>
+/* ── Auth Group Page ──────────────────────────────────── */
+.epf-tab3-wrap{padding:0 0 32px;}
+.epf-tab3-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;
+}
+.epf-tab3-header h3{font-size:18px;font-weight:700;color:#1A202C;margin:0;}
+.epf-tab3-header p{font-size:13px;color:#718096;margin:4px 0 0;}
+
+/* ── Add Group Button ─────────────────────────────────── */
+.epf-btn-add-group{
+  background:#4F46E5;color:#fff;border:none;border-radius:6px;
+  padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.epf-btn-add-group:hover{background:#4338CA;}
+
+/* ── Empty State ──────────────────────────────────────── */
+.epf-empty-state{
+  text-align:center;padding:48px 24px;
+  background:#fff;border:2px dashed #CBD5E0;border-radius:10px;
+}
+.epf-empty-state .es-icon{font-size:48px;margin-bottom:12px;}
+.epf-empty-state h4{font-size:16px;font-weight:700;color:#1A202C;margin:0 0 8px;}
+.epf-empty-state p{font-size:14px;color:#718096;margin:0 0 20px;}
+
+/* ── Group Card Grid ──────────────────────────────────── */
+.epf-group-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:16px;margin-bottom:24px;
+}
+.epf-group-card{
+  background:#fff;border:1px solid #E2E8F0;border-radius:10px;
+  padding:20px;transition:box-shadow .2s;
+}
+.epf-group-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.1);}
+.epf-group-card .gc-name{font-size:16px;font-weight:700;color:#1A202C;margin-bottom:8px;}
+.epf-group-card .gc-meta{
+  font-size:12px;color:#718096;margin-bottom:12px;
+  display:flex;gap:12px;flex-wrap:wrap;
+}
+.epf-group-card .gc-meta span{display:flex;align-items:center;gap:4px;}
+.epf-group-card .gc-members{
+  background:#F7FAFC;border-radius:6px;padding:10px 12px;margin-bottom:14px;
+}
+.epf-group-card .gc-members .mem-label{
+  font-size:11px;font-weight:600;color:#718096;text-transform:uppercase;
+  letter-spacing:.5px;margin-bottom:6px;
+}
+.epf-group-card .member-pill{
+  display:inline-block;background:#EDE9FE;color:#5B21B6;
+  border-radius:12px;padding:3px 10px;font-size:12px;font-weight:600;
+  margin:2px 3px 2px 0;
+}
+.epf-group-card .gc-actions{display:flex;gap:8px;}
+.epf-btn-edit-group{
+  background:#fff;border:1px solid #4F46E5;color:#4F46E5;
+  border-radius:6px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;
+}
+.epf-btn-edit-group:hover{background:#EDE9FE;}
+.epf-btn-del-group{
+  background:#fff;border:1px solid #EF4444;color:#EF4444;
+  border-radius:6px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;
+}
+.epf-btn-del-group:hover{background:#FFF5F5;}
+
+/* ── Group Modal ──────────────────────────────────────── */
+.epf-group-modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);
+  display:none;align-items:center;justify-content:center;z-index:9999;
+}
+.epf-group-modal-overlay.active{display:flex;}
+.epf-group-modal{
+  background:#fff;border-radius:12px;width:600px;max-width:96vw;
+  max-height:90vh;overflow-y:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);
+}
+.egm-header{
+  padding:20px 24px;border-bottom:1px solid #E2E8F0;position:sticky;top:0;
+  background:#fff;display:flex;align-items:center;justify-content:space-between;z-index:1;
+}
+.egm-header h4{font-size:17px;font-weight:700;color:#1A202C;margin:0;}
+.egm-header .close-btn{background:none;border:none;font-size:20px;color:#718096;cursor:pointer;}
+.egm-body{padding:24px;}
+
+.epf-form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+@media(max-width:500px){.epf-form-row{grid-template-columns:1fr;}}
+.epf-form-group{margin-bottom:16px;}
+.epf-form-group label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;}
+.epf-form-group label .req{color:#EF4444;}
+.epf-form-group input,.epf-form-group select{
+  width:100%;border:1px solid #D1D5DB;border-radius:8px;
+  padding:9px 12px;font-size:14px;font-family:inherit;
+  transition:border-color .15s;box-sizing:border-box;
+}
+.epf-form-group input:focus,.epf-form-group select:focus{
+  outline:none;border-color:#4F46E5;box-shadow:0 0 0 3px rgba(79,70,229,.1);
+}
+
+/* Shuttle (member picker) */
+.epf-shuttle{
+  display:grid;grid-template-columns:1fr 40px 1fr;gap:8px;align-items:center;
+}
+.epf-shuttle-list{
+  border:1px solid #D1D5DB;border-radius:8px;overflow:hidden;
+  background:#fff;height:160px;
+}
+.epf-shuttle-list .list-label{
+  background:#F7FAFC;border-bottom:1px solid #E2E8F0;
+  padding:8px 12px;font-size:11px;font-weight:700;color:#718096;
+  text-transform:uppercase;letter-spacing:.5px;
+}
+.epf-shuttle-list select{
+  width:100%;border:none!important;border-radius:0!important;
+  height:calc(100% - 33px);padding:4px;font-size:13px;
+  outline:none!important;box-shadow:none!important;resize:none;
+}
+.epf-shuttle-btns{display:flex;flex-direction:column;gap:6px;align-items:center;}
+.epf-shuttle-btn{
+  width:36px;height:36px;border:1px solid #D1D5DB;border-radius:6px;
+  background:#fff;cursor:pointer;font-size:16px;display:flex;
+  align-items:center;justify-content:center;
+}
+.epf-shuttle-btn:hover{background:#EDE9FE;border-color:#4F46E5;color:#4F46E5;}
+
+.epf-member-validation{
+  font-size:12px;color:#EF4444;margin-top:6px;display:none;
+}
+
+.egm-footer{
+  padding:16px 24px;border-top:1px solid #E2E8F0;
+  display:flex;gap:10px;justify-content:flex-end;background:#F9FAFB;
+  position:sticky;bottom:0;
+}
+.epf-btn-save-group{
+  background:#4F46E5;color:#fff;border:none;border-radius:6px;
+  padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;
+}
+.epf-btn-save-group:hover{background:#4338CA;}
+.epf-btn-save-group:disabled{opacity:.5;cursor:not-allowed;}
+</style>
+
+<!-- ── Tab 3 Content ─────────────────────────────────────────── -->
+<div class="epf-tab3-wrap">
+  <div class="epf-tab3-header">
+    <div>
+      <h3>Authorizer Groups</h3>
+      <p>Create groups of authorizers who will approve employee transactions. Each group requires a minimum approval quorum.</p>
+    </div>
+    <button class="epf-btn-add-group" onclick="epfOpenGroupModal(null)">
+      + Add Group
+    </button>
+  </div>
+
+  <!-- Group cards rendered from IR / Classic Report -->
+  <!-- APEX replaces this with a "Group Cards" Classic Report -->
+</div>
+
+<!-- ══ Add / Edit Group Modal ════════════════════════════════ -->
+<div class="epf-group-modal-overlay" id="groupModal">
+  <div class="epf-group-modal">
+    <div class="egm-header">
+      <h4 id="groupModalTitle">Add Authorizer Group</h4>
+      <button class="close-btn" onclick="epfCloseGroupModal()">✕</button>
+    </div>
+    <div class="egm-body">
+      <input type="hidden" id="egm-group-id" value="">
+
+      <div class="epf-form-row">
+        <div class="epf-form-group" style="grid-column:1/-1">
+          <label>Group Name <span class="req">*</span></label>
+          <input type="text" id="egm-group-name" placeholder="e.g. Senior Approvers" maxlength="100">
+        </div>
+      </div>
+
+      <div class="epf-form-row">
+        <div class="epf-form-group">
+          <label>Minimum Approvals Required <span class="req">*</span></label>
+          <input type="number" id="egm-min-approvals" min="1" value="1" placeholder="e.g. 2">
+          <div style="font-size:11px;color:#718096;margin-top:4px">
+            Must be ≤ number of selected members
+          </div>
+        </div>
+      </div>
+
+      <!-- Member Shuttle -->
+      <div class="epf-form-group">
+        <label>Group Members <span class="req">*</span></label>
+        <div class="epf-shuttle">
+          <!-- Available list from LOV (EPF_USERS for this company: Admin/Authorizer roles) -->
+          <div class="epf-shuttle-list">
+            <div class="list-label">Available Employees</div>
+            <select id="egm-available" multiple size="8">
+              <!-- Populated via APEX dynamic LOV or page load -->
+            </select>
+          </div>
+          <div class="epf-shuttle-btns">
+            <button class="epf-shuttle-btn" title="Add →"  onclick="epfShuttleMove('egm-available','egm-selected')">→</button>
+            <button class="epf-shuttle-btn" title="← Remove" onclick="epfShuttleMove('egm-selected','egm-available')">←</button>
+            <button class="epf-shuttle-btn" title="Add All →→" onclick="epfShuttleMoveAll('egm-available','egm-selected')">⇒</button>
+            <button class="epf-shuttle-btn" title="←← Remove All" onclick="epfShuttleMoveAll('egm-selected','egm-available')">⇐</button>
+          </div>
+          <div class="epf-shuttle-list">
+            <div class="list-label">Selected Members</div>
+            <select id="egm-selected" multiple size="8">
+            </select>
+          </div>
+        </div>
+        <div class="epf-member-validation" id="egm-member-val">
+          At least one member must be selected.
+        </div>
+        <div class="epf-member-validation" id="egm-quorum-val">
+          Minimum approvals cannot exceed the number of selected members.
+        </div>
+      </div>
+    </div>
+    <div class="egm-footer">
+      <button class="epf-btn-cancel" onclick="epfCloseGroupModal()">Cancel</button>
+      <button class="epf-btn-save-group" id="btnSaveGroup" onclick="epfSaveGroup()">Save Group</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Shuttle helpers ─────────────────────────────────── */
+function epfShuttleMove(fromId, toId) {
+    var from = document.getElementById(fromId);
+    var to   = document.getElementById(toId);
+    Array.from(from.selectedOptions).forEach(function(opt) {
+        to.appendChild(opt.cloneNode(true));
+        from.removeChild(opt);
+    });
+    epfSortSelect(to);
+}
+function epfShuttleMoveAll(fromId, toId) {
+    var from = document.getElementById(fromId);
+    var to   = document.getElementById(toId);
+    Array.from(from.options).forEach(function(opt) { to.appendChild(opt.cloneNode(true)); });
+    from.innerHTML = '';
+    epfSortSelect(to);
+}
+function epfSortSelect(sel) {
+    Array.from(sel.options).sort(function(a,b){return a.text.localeCompare(b.text);})
+         .forEach(function(o){ sel.appendChild(o); });
+}
+
+/* ── Open modal ──────────────────────────────────────── */
+function epfOpenGroupModal(groupId) {
+    document.getElementById('egm-group-id').value        = groupId || '';
+    document.getElementById('egm-group-name').value      = '';
+    document.getElementById('egm-min-approvals').value   = '1';
+    document.getElementById('egm-selected').innerHTML    = '';
+    document.getElementById('groupModalTitle').textContent = groupId ? 'Edit Group' : 'Add Authorizer Group';
+    document.getElementById('egm-member-val').style.display  = 'none';
+    document.getElementById('egm-quorum-val').style.display  = 'none';
+
+    if (groupId) {
+        // Load existing group data via APEX AJAX
+        apex.server.process('LOAD_GROUP_AJAX', {x01: groupId}, {
+            success: function(d) {
+                document.getElementById('egm-group-name').value    = d.group_name    || '';
+                document.getElementById('egm-min-approvals').value = d.min_approvals || 1;
+                // Move members to selected list
+                d.member_ids.forEach(function(uid) {
+                    var avail = document.getElementById('egm-available');
+                    for (var i=0; i<avail.options.length; i++) {
+                        if (avail.options[i].value == uid) {
+                            document.getElementById('egm-selected').appendChild(avail.options[i].cloneNode(true));
+                            avail.remove(i); break;
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    document.getElementById('groupModal').classList.add('active');
+}
+
+function epfCloseGroupModal() {
+    document.getElementById('groupModal').classList.remove('active');
+}
+
+/* ── Save Group ──────────────────────────────────────── */
+function epfSaveGroup() {
+    var name       = document.getElementById('egm-group-name').value.trim();
+    var minAppr    = parseInt(document.getElementById('egm-min-approvals').value, 10);
+    var selOpts    = document.getElementById('egm-selected').options;
+    var memberIds  = Array.from(selOpts).map(function(o){ return o.value; }).join(':');
+    var memberCnt  = selOpts.length;
+
+    // Client-side validation
+    var valid = true;
+    if (!name) { apex.message.showErrors([{type:'error',location:'page',message:'Group name is required.'}]); valid=false; }
+    if (memberCnt === 0) { document.getElementById('egm-member-val').style.display='block'; valid=false; }
+    else { document.getElementById('egm-member-val').style.display='none'; }
+    if (minAppr > memberCnt) { document.getElementById('egm-quorum-val').style.display='block'; valid=false; }
+    else { document.getElementById('egm-quorum-val').style.display='none'; }
+    if (!valid) return;
+
+    // Select all options so values are included in form submit
+    Array.from(document.getElementById('egm-selected').options).forEach(function(o){ o.selected=true; });
+
+    // Set APEX page items and submit
+    apex.item('P_AUTH_GROUP_ID').setValue(document.getElementById('egm-group-id').value);
+    apex.item('P_GROUP_NAME').setValue(name);
+    apex.item('P_MIN_APPROVALS').setValue(minAppr);
+    apex.item('P_MEMBER_USER_IDS').setValue(memberIds);
+    apex.submit('SAVE_GROUP');
+}
+</script>
