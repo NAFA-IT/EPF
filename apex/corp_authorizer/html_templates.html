@@ -1,0 +1,470 @@
+<!-- ============================================================
+     FILE: /home/user/EPF/apex/corp_authorizer/html_templates.html
+     EPF PORTAL  –  Corporate Authorizer Module – HTML Templates
+     Navy theme (#003087). Paste into APEX Static Text regions or
+     Page HTML Header as appropriate.
+     FSD validations: #336-345
+     ============================================================ -->
+
+<!-- ============================================================
+     (a) AUTHORIZE PAGE HEADER
+     Shows "Pending Authorizations" count badge and per-authorizer
+     approval progress indicator.
+     Replace #PENDING_COUNT# and #APPROVALS_TEXT# with APEX subs.
+     ============================================================ -->
+<div class="epf-auth-header" style="
+    background: #003087;
+    color: #fff;
+    padding: 20px 28px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,46,135,0.15);
+">
+    <div>
+        <h2 style="margin:0;font-size:20px;font-weight:700;letter-spacing:0.3px">
+            Authorize Requests
+        </h2>
+        <p style="margin:6px 0 0;font-size:13px;color:#cce5ff">
+            Review and approve or reject pending requests for your company.
+        </p>
+    </div>
+    <div style="text-align:center">
+        <span style="
+            background: #e53935;
+            color: #fff;
+            font-size: 28px;
+            font-weight: 700;
+            padding: 10px 20px;
+            border-radius: 50px;
+            display: inline-block;
+            min-width: 64px;
+        ">#PENDING_COUNT#</span>
+        <p style="margin:6px 0 0;font-size:12px;color:#cce5ff">Pending Actions</p>
+    </div>
+</div>
+
+<!-- Approval Progress Bar Component
+     Use within an IR row or detail popup to show multi-authorizer progress.
+     Replace #APPROVALS_RECEIVED# / #APPROVALS_REQUIRED# with APEX column refs. -->
+<div class="epf-progress-container" style="
+    background: #f5f7fa;
+    border: 1px solid #d0d8e8;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 8px 0;
+">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:13px;font-weight:600;color:#003087">
+            Authorizer Approvals
+        </span>
+        <span style="font-size:13px;color:#555">
+            <strong>#APPROVALS_RECEIVED#</strong> of <strong>#APPROVALS_REQUIRED#</strong> Authorizers have approved
+        </span>
+    </div>
+    <div style="background:#e0e0e0;border-radius:4px;height:8px;overflow:hidden">
+        <div style="
+            background: linear-gradient(90deg, #003087, #0050c8);
+            height: 100%;
+            border-radius: 4px;
+            /* Width set dynamically via APEX substitution */
+            width: calc(#APPROVALS_RECEIVED# / #APPROVALS_REQUIRED# * 100%);
+            transition: width 0.4s ease;
+        "></div>
+    </div>
+</div>
+
+<!-- Authorize Request Cards (Page 70 Landing) -->
+<div class="epf-cards-grid" style="
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+">
+    <!-- Card template — repeat for each request type -->
+    <a href="f?p=&APP_ID.:71:&SESSION." style="text-decoration:none">
+        <div class="epf-card" style="
+            background: #fff;
+            border: 1px solid #d0d8e8;
+            border-top: 4px solid #003087;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: box-shadow 0.2s, transform 0.2s;
+            cursor: pointer;
+        " onmouseover="this.style.boxShadow='0 4px 16px rgba(0,48,135,0.15)';this.style.transform='translateY(-2px)'"
+           onmouseout="this.style.boxShadow='none';this.style.transform='none'">
+            <div style="font-size:36px;margin-bottom:10px">&#128196;</div>
+            <h3 style="font-size:14px;font-weight:700;color:#003087;margin:0 0 6px">Contribution Uploads</h3>
+            <span style="
+                background:#e53935;color:#fff;font-size:11px;
+                padding:2px 8px;border-radius:12px;font-weight:600
+            ">#CONTRIB_PENDING# Pending</span>
+        </div>
+    </a>
+
+    <a href="f?p=&APP_ID.:72:&SESSION." style="text-decoration:none">
+        <div class="epf-card" style="
+            background: #fff;
+            border: 1px solid #d0d8e8;
+            border-top: 4px solid #003087;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        " onmouseover="this.style.boxShadow='0 4px 16px rgba(0,48,135,0.15)';this.style.transform='translateY(-2px)'"
+           onmouseout="this.style.boxShadow='none';this.style.transform='none'">
+            <div style="font-size:36px;margin-bottom:10px">&#128180;</div>
+            <h3 style="font-size:14px;font-weight:700;color:#003087;margin:0 0 6px">Loan Requests</h3>
+            <span style="background:#e53935;color:#fff;font-size:11px;padding:2px 8px;border-radius:12px;font-weight:600">#LOAN_PENDING# Pending</span>
+        </div>
+    </a>
+
+    <a href="f?p=&APP_ID.:73:&SESSION." style="text-decoration:none">
+        <div class="epf-card" style="
+            background: #fff;
+            border: 1px solid #d0d8e8;
+            border-top: 4px solid #003087;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        " onmouseover="this.style.boxShadow='0 4px 16px rgba(0,48,135,0.15)';this.style.transform='translateY(-2px)'"
+           onmouseout="this.style.boxShadow='none';this.style.transform='none'">
+            <div style="font-size:36px;margin-bottom:10px">&#128176;</div>
+            <h3 style="font-size:14px;font-weight:700;color:#003087;margin:0 0 6px">Withdrawal Requests</h3>
+            <span style="background:#e53935;color:#fff;font-size:11px;padding:2px 8px;border-radius:12px;font-weight:600">#WD_PENDING# Pending</span>
+        </div>
+    </a>
+
+    <a href="f?p=&APP_ID.:74:&SESSION." style="text-decoration:none">
+        <div class="epf-card" style="
+            background: #fff;
+            border: 1px solid #d0d8e8;
+            border-top: 4px solid #003087;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        " onmouseover="this.style.boxShadow='0 4px 16px rgba(0,48,135,0.15)';this.style.transform='translateY(-2px)'"
+           onmouseout="this.style.boxShadow='none';this.style.transform='none'">
+            <div style="font-size:36px;margin-bottom:10px">&#128274;</div>
+            <h3 style="font-size:14px;font-weight:700;color:#003087;margin:0 0 6px">Lien Requests</h3>
+            <span style="background:#e53935;color:#fff;font-size:11px;padding:2px 8px;border-radius:12px;font-weight:600">#LIEN_PENDING# Pending</span>
+        </div>
+    </a>
+
+    <a href="f?p=&APP_ID.:75:&SESSION." style="text-decoration:none">
+        <div class="epf-card" style="
+            background: #fff;
+            border: 1px solid #d0d8e8;
+            border-top: 4px solid #003087;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        " onmouseover="this.style.boxShadow='0 4px 16px rgba(0,48,135,0.15)';this.style.transform='translateY(-2px)'"
+           onmouseout="this.style.boxShadow='none';this.style.transform='none'">
+            <div style="font-size:36px;margin-bottom:10px">&#128203;</div>
+            <h3 style="font-size:14px;font-weight:700;color:#003087;margin:0 0 6px">NOC Requests</h3>
+            <span style="background:#e53935;color:#fff;font-size:11px;padding:2px 8px;border-radius:12px;font-weight:600">#NOC_PENDING# Pending</span>
+        </div>
+    </a>
+</div>
+
+<!-- ============================================================
+     (b) ACTION REQUIRED POPUP / SIDEBAR
+     Shows all pending authorizer(s) names + emails for a request.
+     Used in the status popup (FSD #258, #261, #268, #271).
+     ============================================================ -->
+<div id="epf-action-required-panel" style="
+    background: #fffde7;
+    border: 1px solid #fbc02d;
+    border-left: 4px solid #f57f17;
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin: 16px 0;
+">
+    <h4 style="color:#e65100;margin:0 0 10px;font-size:14px;display:flex;align-items:center;gap:8px">
+        <span style="font-size:18px">&#9888;</span> Action Required
+    </h4>
+    <div id="epf-action-required-list">
+        <!-- Populated dynamically by APEX / JavaScript from authorizer decisions query -->
+        <!-- Each item rendered as: -->
+        <!-- <p style="margin:6px 0;font-size:13px;color:#555">
+               <strong>[Name and Role]</strong>: [Request type] pending at
+               <a href="mailto:[email]">[Name] ([email])</a>
+             </p> -->
+    </div>
+</div>
+
+<!-- JavaScript to populate Action Required panel from APEX JSON region -->
+<script>
+(function() {
+    // Called after page loads with data from the authorizer decisions query
+    function renderActionRequired(decisions) {
+        var container = document.getElementById('epf-action-required-list');
+        if (!container) return;
+        var html = '';
+        var hasPending = false;
+        decisions.forEach(function(d) {
+            if (d.DECISION_STATUS === 'PENDING') {
+                hasPending = true;
+                html += '<p style="margin:6px 0;font-size:13px;color:#555">'
+                      + '<span style="color:#e53935">&#9679;</span> Pending at: '
+                      + '<strong>' + d.FULL_NAME + '</strong>'
+                      + ' (<a href="mailto:' + d.EMAIL + '" style="color:#003087">'
+                      + d.EMAIL + '</a>)</p>';
+            } else if (d.DECISION_STATUS === 'APPROVE') {
+                html += '<p style="margin:6px 0;font-size:13px;color:#555">'
+                      + '<span style="color:#43a047">&#10003;</span> Approved by: '
+                      + '<strong>' + d.FULL_NAME + '</strong></p>';
+            } else if (d.DECISION_STATUS === 'REJECT') {
+                html += '<p style="margin:6px 0;font-size:13px;color:#555">'
+                      + '<span style="color:#e53935">&#10007;</span> Rejected by: '
+                      + '<strong>' + d.FULL_NAME + '</strong></p>';
+            }
+        });
+        if (!hasPending && html === '') {
+            document.getElementById('epf-action-required-panel').style.display = 'none';
+        }
+        container.innerHTML = html;
+    }
+    // Exposed for APEX DA or page load call
+    window.EPF = window.EPF || {};
+    window.EPF.renderActionRequired = renderActionRequired;
+})();
+</script>
+
+<!-- ============================================================
+     (c) SETTINGS AUTHORIZER VIEW  –  Loan Settings
+     Renders current (strikethrough red) vs pending (green) diff.
+     FSD #339-340: Same strikethrough style as Checker page #324
+     but with Authorize (Approve/Reject) buttons.
+     Replace template variables with APEX column substitutions.
+     ============================================================ -->
+<div class="epf-settings-auth-section" style="
+    background: #fff;
+    border: 1px solid #d0d8e8;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+">
+    <!-- Section header -->
+    <div style="background:#003087;color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between">
+        <h3 style="margin:0;font-size:15px;font-weight:700">Loan Settings</h3>
+        <span style="
+            background: #fbc02d;
+            color: #333;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+        ">PENDING AUTHORIZATION</span>
+    </div>
+
+    <!-- Settings comparison table -->
+    <div style="padding:20px">
+        <table style="width:100%;border-collapse:collapse;font-size:14px">
+            <thead>
+                <tr style="background:#f5f7fa">
+                    <th style="padding:10px 14px;text-align:left;border-bottom:2px solid #d0d8e8;color:#003087;font-size:12px;text-transform:uppercase;letter-spacing:0.5px">
+                        Setting
+                    </th>
+                    <th style="padding:10px 14px;text-align:left;border-bottom:2px solid #d0d8e8;color:#e53935;font-size:12px;text-transform:uppercase;letter-spacing:0.5px">
+                        Current Value
+                    </th>
+                    <th style="padding:10px 14px;text-align:left;border-bottom:2px solid #d0d8e8;color:#2e7d32;font-size:12px;text-transform:uppercase;letter-spacing:0.5px">
+                        Proposed Value
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="border-bottom:1px solid #f0f0f0">
+                    <td style="padding:10px 14px;font-weight:600;color:#555">Interest Type</td>
+                    <td style="padding:10px 14px;text-decoration:line-through;color:#e53935">
+                        #CURRENT_INTEREST_TYPE#
+                    </td>
+                    <td style="padding:10px 14px;color:#2e7d32;font-weight:600">
+                        #PENDING_INTEREST_TYPE#
+                    </td>
+                </tr>
+                <tr style="border-bottom:1px solid #f0f0f0;background:#fafafa">
+                    <td style="padding:10px 14px;font-weight:600;color:#555">Interest Rate (%)</td>
+                    <td style="padding:10px 14px;text-decoration:line-through;color:#e53935">
+                        #CURRENT_INTEREST_RATE#%
+                    </td>
+                    <td style="padding:10px 14px;color:#2e7d32;font-weight:600">
+                        #PENDING_INTEREST_RATE#%
+                    </td>
+                </tr>
+                <tr style="border-bottom:1px solid #f0f0f0">
+                    <td style="padding:10px 14px;font-weight:600;color:#555">Floating Rate Tenure (months)</td>
+                    <td style="padding:10px 14px;text-decoration:line-through;color:#e53935">
+                        #CURRENT_FRT#
+                    </td>
+                    <td style="padding:10px 14px;color:#2e7d32;font-weight:600">
+                        #PENDING_FRT#
+                    </td>
+                </tr>
+                <tr style="border-bottom:1px solid #f0f0f0;background:#fafafa">
+                    <td style="padding:10px 14px;font-weight:600;color:#555">Loan Limit (% of Balance)</td>
+                    <td style="padding:10px 14px;text-decoration:line-through;color:#e53935">
+                        #CURRENT_LOAN_LIMIT_PCT#%
+                    </td>
+                    <td style="padding:10px 14px;color:#2e7d32;font-weight:600">
+                        #PENDING_LOAN_LIMIT_PCT#%
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:10px 14px;font-weight:600;color:#555">Max Instalment Period (months)</td>
+                    <td style="padding:10px 14px;text-decoration:line-through;color:#e53935">
+                        #CURRENT_MAX_MONTHS#
+                    </td>
+                    <td style="padding:10px 14px;color:#2e7d32;font-weight:600">
+                        #PENDING_MAX_MONTHS#
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Remarks field (for rejection) -->
+        <div style="margin-top:16px">
+            <label style="font-size:13px;font-weight:600;color:#555;display:block;margin-bottom:6px">
+                Remarks <span style="color:#e53935">(required for rejection)</span>
+            </label>
+            <textarea id="P76_REMARKS" name="P76_REMARKS" rows="3" style="
+                width:100%;
+                padding:10px;
+                border:1px solid #d0d8e8;
+                border-radius:4px;
+                font-size:13px;
+                resize:vertical;
+                box-sizing:border-box;
+            " placeholder="Enter remarks (mandatory when rejecting)..."></textarea>
+        </div>
+
+        <!-- Action buttons -->
+        <div style="margin-top:16px;display:flex;gap:12px">
+            <button type="button"
+                onclick="apex.submit({request:'APPROVE_LOAN_SETTINGS'})"
+                style="
+                    background:#2e7d32;
+                    color:#fff;
+                    border:none;
+                    padding:10px 28px;
+                    border-radius:4px;
+                    font-size:14px;
+                    font-weight:700;
+                    cursor:pointer;
+                    letter-spacing:0.3px;
+                ">
+                Authorize
+            </button>
+            <button type="button"
+                onclick="apex.submit({request:'REJECT_LOAN_SETTINGS'})"
+                style="
+                    background:#c62828;
+                    color:#fff;
+                    border:none;
+                    padding:10px 28px;
+                    border-radius:4px;
+                    font-size:14px;
+                    font-weight:700;
+                    cursor:pointer;
+                    letter-spacing:0.3px;
+                ">
+                Reject
+            </button>
+            <a href="f?p=&APP_ID.:76:&SESSION.:::::" style="
+                background:#f5f5f5;
+                color:#555;
+                border:1px solid #d0d8e8;
+                padding:10px 20px;
+                border-radius:4px;
+                font-size:14px;
+                text-decoration:none;
+                display:inline-flex;
+                align-items:center;
+            ">
+                History
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     Remarks Popup (for Reject action on authorize pages)
+     Triggered when user clicks Reject button in the IR toolbar.
+     ============================================================ -->
+<div id="epf-reject-popup" class="epf-modal-overlay" style="
+    display:none;
+    position:fixed;inset:0;
+    background:rgba(0,0,0,0.5);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+">
+    <div class="epf-modal-box" style="
+        background:#fff;
+        border-radius:8px;
+        padding:28px;
+        max-width:480px;
+        width:90%;
+        box-shadow:0 8px 32px rgba(0,0,0,0.2);
+    ">
+        <h3 style="margin:0 0 16px;color:#003087;font-size:17px">Reject Request</h3>
+        <p style="font-size:13px;color:#555;margin-bottom:12px">
+            Please enter remarks explaining the reason for rejection.
+            <span style="color:#e53935">Remarks are mandatory.</span>
+        </p>
+        <textarea id="epf-reject-remarks" rows="4" style="
+            width:100%;padding:10px;
+            border:1px solid #d0d8e8;border-radius:4px;
+            font-size:13px;resize:vertical;box-sizing:border-box;
+        " placeholder="Enter rejection remarks..."></textarea>
+        <div style="display:flex;gap:12px;margin-top:16px;justify-content:flex-end">
+            <button onclick="document.getElementById('epf-reject-popup').style.display='none'"
+                style="background:#f5f5f5;color:#555;border:1px solid #d0d8e8;padding:9px 20px;border-radius:4px;cursor:pointer;font-size:13px">
+                Cancel
+            </button>
+            <button id="epf-reject-confirm-btn"
+                style="background:#c62828;color:#fff;border:none;padding:9px 24px;border-radius:4px;cursor:pointer;font-size:13px;font-weight:700">
+                Confirm Rejection
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Reject popup helper for authorize pages
+(function() {
+    var currentRejectType = null;
+    window.EPF = window.EPF || {};
+
+    window.EPF.showRejectPopup = function(requestType) {
+        currentRejectType = requestType;
+        document.getElementById('epf-reject-remarks').value = '';
+        document.getElementById('epf-reject-popup').style.display = 'flex';
+        document.getElementById('epf-reject-remarks').focus();
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var btn = document.getElementById('epf-reject-confirm-btn');
+        if (btn) {
+            btn.addEventListener('click', function() {
+                var remarks = document.getElementById('epf-reject-remarks').value.trim();
+                if (!remarks) {
+                    alert('Remarks are mandatory when rejecting a request.');
+                    return;
+                }
+                // Set remarks item and submit
+                apex.item('P' + currentRejectType + '_REMARKS').setValue(remarks);
+                apex.submit({request: 'REJECT_' + currentRejectType});
+            });
+        }
+    });
+})();
+</script>
+<!-- ============================================================
+     END of corp_authorizer/html_templates.html
+     ============================================================ -->
