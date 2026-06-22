@@ -180,7 +180,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
     -- ─────────────────────────────────────────────────────────────
     FUNCTION HAS_ACTIVE_CHECKER (
         p_company_id IN NUMBER
-    ) RETURN BOOLEAN IS
+    ) RETURN VARCHAR2 IS
         v_cnt NUMBER;
     BEGIN
         SELECT COUNT(*)
@@ -192,7 +192,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
            AND ucr.IS_ACTIVE = 'Y'
            AND r.ROLE_CODE   = 'CORP_CHECKER'
            AND EPF_STATUS_PKG.GET_CODE(uc.STATUS_ID) = 'ACTIVE';
-        RETURN v_cnt > 0;
+        RETURN CASE WHEN v_cnt > 0 THEN 'Y' ELSE 'N' END;
     END HAS_ACTIVE_CHECKER;
 
     -- ─────────────────────────────────────────────────────────────
@@ -204,7 +204,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
         p_company_id IN NUMBER
     ) RETURN NUMBER IS
     BEGIN
-        IF HAS_ACTIVE_CHECKER(p_company_id) THEN
+        IF HAS_ACTIVE_CHECKER(p_company_id) = 'Y' THEN
             RETURN EPF_STATUS_PKG.GET_ID('REQUEST', 'PENDING_CHECKER');
         ELSE
             RETURN EPF_STATUS_PKG.GET_ID('REQUEST', 'PENDING_AUTHORIZER');
@@ -218,7 +218,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
         p_company_id IN NUMBER
     ) RETURN VARCHAR2 IS
     BEGIN
-        IF HAS_ACTIVE_CHECKER(p_company_id) THEN
+        IF HAS_ACTIVE_CHECKER(p_company_id) = 'Y' THEN
             RETURN 'Checker';
         ELSE
             RETURN 'Authorizer';
@@ -408,7 +408,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
         p_ref_id     IN NUMBER
     ) IS
     BEGIN
-        IF HAS_ACTIVE_CHECKER(p_company_id) THEN
+        IF HAS_ACTIVE_CHECKER(p_company_id) = 'Y' THEN
             NOTIFY_ROLE(p_company_id, 'CORP_CHECKER', p_title, p_message, p_ref_type, p_ref_id);
         ELSE
             NOTIFY_ROLE(p_company_id, 'CORP_AUTHORIZER', p_title, p_message, p_ref_type, p_ref_id);
@@ -1190,7 +1190,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
         p_out_count    OUT NUMBER
     ) IS
         v_maker_name  EPF_USERS.FULL_NAME%TYPE := GET_ACTOR_NAME(p_maker_ucid);
-        v_has_checker BOOLEAN := HAS_ACTIVE_CHECKER(p_company_id);
+        v_has_checker VARCHAR2(1) := HAS_ACTIVE_CHECKER(p_company_id);
         v_pend_sid    NUMBER  := EPF_STATUS_PKG.GET_ID('REQUEST', 'PENDING_CHECKER');
         v_auth_sid    NUMBER  := EPF_STATUS_PKG.GET_ID('REQUEST', 'AUTHORIZED');
         v_count       NUMBER  := 0;
@@ -1223,7 +1223,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
                     CONTINUE;
                 END IF;
 
-                IF v_has_checker THEN
+                IF v_has_checker = 'Y' THEN
                     INSERT INTO EPF_EMP_DISABLE_REQUESTS (
                         COMPANY_ID, FOLIO_ID, STATUS_ID, MAKER_UCID, MAKER_DATE
                     ) VALUES (
@@ -1290,7 +1290,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
 
         p_out_success := 'Y';
         p_out_count   := v_count;
-        IF v_has_checker THEN
+        IF v_has_checker = 'Y' THEN
             p_out_message := v_count || ' disablement request(s) sent to the Checker for approval.';
         ELSE
             p_out_message := v_count || ' employee(s) have been disabled.';
@@ -1534,7 +1534,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
         p_out_message  OUT VARCHAR2
     ) IS
         v_maker_name  EPF_USERS.FULL_NAME%TYPE := GET_ACTOR_NAME(p_maker_ucid);
-        v_has_checker BOOLEAN := HAS_ACTIVE_CHECKER(p_company_id);
+        v_has_checker VARCHAR2(1) := HAS_ACTIVE_CHECKER(p_company_id);
         v_count       NUMBER  := 0;
         v_feat_label  VARCHAR2(30);
     BEGIN
@@ -1570,7 +1570,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
                     ON (fa.COMPANY_ID = d.CID AND fa.FOLIO_ID = d.FID
                         AND fa.FEATURE_CODE = d.FC)
                     WHEN MATCHED THEN UPDATE SET
-                        ACCESS_STATUS = CASE WHEN v_has_checker
+                        ACCESS_STATUS = CASE WHEN v_has_checker = 'Y'
                                              THEN 'PENDING_ADDITION' ELSE 'ENABLED' END,
                         MAKER_UCID = p_maker_ucid, MAKER_DATE = SYSDATE,
                         CHECKER_UCID = NULL, CHECKER_DATE = NULL
@@ -1580,11 +1580,11 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
                         MAKER_UCID, MAKER_DATE
                     ) VALUES (
                         d.CID, d.FID, d.FC,
-                        CASE WHEN v_has_checker THEN 'PENDING_ADDITION' ELSE 'ENABLED' END,
+                        CASE WHEN v_has_checker = 'Y' THEN 'PENDING_ADDITION' ELSE 'ENABLED' END,
                         p_maker_ucid, SYSDATE
                     );
                 ELSE  -- REMOVE
-                    IF v_has_checker THEN
+                    IF v_has_checker = 'Y' THEN
                         UPDATE EPF_FEATURE_ACCESS
                            SET ACCESS_STATUS = 'PENDING_DELETION',
                                MAKER_UCID = p_maker_ucid, MAKER_DATE = SYSDATE
@@ -1616,7 +1616,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
                     p_company_id  => p_company_id,
                     p_actor_ucid  => p_maker_ucid,
                     p_action_code => 'FEATURE_' || p_action || '_REQUESTED',
-                    p_text        => CASE WHEN v_has_checker
+                    p_text        => CASE WHEN v_has_checker = 'Y'
                                           THEN v_feat_label || ' access '
                                             || LOWER(p_action) || 'ition request for '
                                             || v_emp_name || ' created by Maker ' || v_maker_name
@@ -1632,7 +1632,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
                     p_page_name   => 'Settings – ' || v_feat_label || ' Settings'
                 );
 
-                IF v_has_checker THEN
+                IF v_has_checker = 'Y' THEN
                     NOTIFY_ROLE(
                         p_company_id => p_company_id,
                         p_role_code  => 'CORP_CHECKER',
@@ -1650,7 +1650,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
         COMMIT;
 
         p_out_success := 'Y';
-        IF v_has_checker THEN
+        IF v_has_checker = 'Y' THEN
             p_out_message := v_count || ' change request(s) sent to the Checker for approval.';
         ELSE
             p_out_message := 'Changes have been saved.';   -- instant apply (FSD #4, #326)
@@ -1806,7 +1806,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
         p_out_group_id     OUT NUMBER
     ) IS
         v_maker_name  EPF_USERS.FULL_NAME%TYPE := GET_ACTOR_NAME(p_maker_ucid);
-        v_has_checker BOOLEAN := HAS_ACTIVE_CHECKER(p_company_id);
+        v_has_checker VARCHAR2(1) := HAS_ACTIVE_CHECKER(p_company_id);
         v_pend_sid    NUMBER  := EPF_STATUS_PKG.GET_ID('REQUEST', 'PENDING_CHECKER');
         v_auth_sid    NUMBER  := EPF_STATUS_PKG.GET_ID('REQUEST', 'AUTHORIZED');
         v_group_id    NUMBER  := p_group_id;
@@ -1833,7 +1833,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
                 IS_DEFAULT, STATUS_ID, MAKER_UCID, MAKER_DATE
             ) VALUES (
                 p_company_id, p_group_name, p_mm_limit, p_debt_limit, p_equity_limit,
-                'N', CASE WHEN v_has_checker THEN v_pend_sid ELSE v_auth_sid END,
+                'N', CASE WHEN v_has_checker = 'Y' THEN v_pend_sid ELSE v_auth_sid END,
                 p_maker_ucid, SYSDATE
             )
             RETURNING GROUP_ID INTO v_group_id;
@@ -1848,7 +1848,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
                 RETURN;
             END IF;
 
-            IF v_has_checker THEN
+            IF v_has_checker = 'Y' THEN
                 -- Stash the pending edit; old data stays live (FSD #334.2b)
                 v_json := JSON_OBJECT(
                               'group_name'   VALUE p_group_name,
@@ -1874,7 +1874,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
         END IF;
 
         -- ── Member additions / removals ────────────────────────
-        v_member_stat := CASE WHEN v_has_checker THEN 'PENDING_ADDITION' ELSE 'ENABLED' END;
+        v_member_stat := CASE WHEN v_has_checker = 'Y' THEN 'PENDING_ADDITION' ELSE 'ENABLED' END;
 
         IF p_add_folio_ids IS NOT NULL THEN
             FOR rec IN (
@@ -1896,7 +1896,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
                 SELECT TO_NUMBER(COLUMN_VALUE) AS FOLIO_ID
                   FROM TABLE(APEX_STRING.SPLIT_NUMBERS(p_remove_folio_ids, ':'))
             ) LOOP
-                IF v_has_checker THEN
+                IF v_has_checker = 'Y' THEN
                     UPDATE EPF_REALLOC_GROUP_MEMBERS
                        SET ACCESS_STATUS = 'PENDING_DELETION'
                      WHERE GROUP_ID = v_group_id AND FOLIO_ID = rec.FOLIO_ID
@@ -1919,14 +1919,14 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
             p_text        => 'Portfolio reallocation group ' || p_group_name
                           || CASE WHEN v_is_new THEN ' created' ELSE ' edited' END
                           || ' by Maker ' || v_maker_name
-                          || CASE WHEN NOT v_has_checker
+                          || CASE WHEN v_has_checker = 'Y' = 'N'
                                   THEN ' and saved (no Checker exists)' ELSE '' END,
             p_ref_type    => 'REALLOC',
             p_ref_id      => v_group_id,
             p_page_name   => 'Settings – Portfolio Reallocation'
         );
 
-        IF v_has_checker THEN
+        IF v_has_checker = 'Y' THEN
             NOTIFY_ROLE(
                 p_company_id => p_company_id,
                 p_role_code  => 'CORP_CHECKER',
@@ -1942,7 +1942,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
 
         p_out_success  := 'Y';
         p_out_group_id := v_group_id;
-        IF v_has_checker THEN
+        IF v_has_checker = 'Y' THEN
             p_out_message := 'Group has been sent to the Checker for approval.';
         ELSE
             p_out_message := 'Group has been saved.';
