@@ -375,7 +375,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_ADMIN_PKG AS
         COMMIT;
 
         -- ── Send welcome email with set-password link ───────────
-        EPF_AUTH_PKG.SET_FIRST_PASSWORD_TOKEN(v_new_user_id, NULL);
+        EPF_PKG_AUTH.SET_FIRST_PASSWORD_TOKEN(v_new_user_id, NULL);
 
         -- ── Activity log ───────────────────────────────────────
         LOG_ACTIVITY(

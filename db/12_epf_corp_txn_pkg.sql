@@ -282,7 +282,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
     -- ─────────────────────────────────────────────────────────────
     --  NARRATE
     --  Builds an FSD-exact narration and dual-logs it via
-    --  EPF_AUTH_PKG.LOG_ACTIVITY: once for the actor, once for the
+    --  EPF_PKG_AUTH.LOG_ACTIVITY: once for the actor, once for the
     --  affected employee (if resolvable).  Each entry is tagged
     --  '[Ref <REF_TYPE>-<REF_ID>]' so GET_REQUEST_HISTORY can
     --  retrieve request-specific history.
@@ -316,7 +316,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
         END;
 
         -- Actor-side log
-        EPF_AUTH_PKG.LOG_ACTIVITY(
+        EPF_PKG_AUTH.LOG_ACTIVITY(
             p_user_id         => v_actor_user_id,
             p_company_id      => p_company_id,
             p_user_company_id => p_actor_ucid,
@@ -335,7 +335,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
                 EXCEPTION
                     WHEN NO_DATA_FOUND THEN v_emp_user_id := NULL;
                 END;
-                EPF_AUTH_PKG.LOG_ACTIVITY(
+                EPF_PKG_AUTH.LOG_ACTIVITY(
                     p_user_id         => v_emp_user_id,
                     p_company_id      => p_company_id,
                     p_user_company_id => v_emp_ucid,
