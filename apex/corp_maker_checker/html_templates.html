@@ -1,0 +1,597 @@
+<!-- ============================================================
+     FILE: /home/user/EPF/apex/corp_maker_checker/html_templates.html
+     EPF PORTAL – Corporate Maker / Checker Module – HTML/CSS/JS
+     Each section corresponds to a Static Content Region or
+     Inline CSS/JS to be added in APEX Application Builder.
+     Theme: navy #003087, epf-* classes (same as corp_admin).
+     FSD validations: #203–#334.
+     ============================================================ -->
+
+<!-- ============================================================
+     SECTION 0: SHARED CSS (paste into App > Shared Components >
+     Theme > Custom CSS, or each page's Inline CSS)
+     ============================================================ -->
+<style>
+/* ── Status Badges (FSD #255–#258) ── */
+.epf-badge-pending-checker { background:#fff3cd; color:#856404; border-radius:12px; padding:3px 10px; font-size:12px; font-weight:600; }
+.epf-badge-pending-auth    { background:#cce5ff; color:#004085; border-radius:12px; padding:3px 10px; font-size:12px; font-weight:600; }
+.epf-badge-completed       { background:#d4edda; color:#155724; border-radius:12px; padding:3px 10px; font-size:12px; font-weight:600; }
+.epf-badge-rejected        { background:#f8d7da; color:#721c24; border-radius:12px; padding:3px 10px; font-size:12px; font-weight:600; }
+.epf-badge-default         { background:#e2e3e5; color:#495057; border-radius:12px; padding:3px 10px; font-size:12px; font-weight:600; }
+
+/* ── Buttons ── */
+.epf-btn-primary { background:#003087; color:#fff; border:none; border-radius:6px; padding:7px 18px; font-size:13px; cursor:pointer; }
+.epf-btn-danger  { background:#c0392b; color:#fff; border:none; border-radius:6px; padding:7px 18px; font-size:13px; cursor:pointer; }
+.epf-btn-success { background:#1e7e34; color:#fff; border:none; border-radius:6px; padding:7px 18px; font-size:13px; cursor:pointer; }
+.epf-btn-plain   { background:#fff; color:#333; border:1px solid #ccc; border-radius:6px; padding:7px 18px; font-size:13px; cursor:pointer; }
+.epf-btn-link    { background:transparent; color:#003087; border:none; text-decoration:underline; cursor:pointer; font-size:13px; }
+.epf-btn-primary:hover { background:#00205f; }
+.epf-btn-danger:hover  { background:#922b21; }
+.epf-btn-success:hover { background:#155d27; }
+
+/* ── Toolbar ── */
+.epf-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+
+/* ── Wizard step progress bar (FSD #213, #228, #234) ── */
+.epf-steps { display:flex; justify-content:center; gap:0; margin:18px 0 26px; }
+.epf-step  { display:flex; align-items:center; }
+.epf-step-circle { width:34px; height:34px; border-radius:50%; background:#e2e3e5; color:#495057;
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; }
+.epf-step.active .epf-step-circle   { background:#003087; color:#fff; }
+.epf-step.done   .epf-step-circle   { background:#1e7e34; color:#fff; }
+.epf-step-label  { margin:0 14px 0 8px; font-size:13px; font-weight:600; color:#555; }
+.epf-step.active .epf-step-label    { color:#003087; }
+.epf-step-bar    { width:60px; height:3px; background:#e2e3e5; margin-right:14px; }
+.epf-step.done   + .epf-step .epf-step-bar { background:#1e7e34; }
+
+/* ── Batch checking progress bar (FSD #299.3) ── */
+.epf-batch-progress { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.epf-batch-chip { padding:5px 14px; border-radius:14px; background:#e2e3e5; font-size:12px; font-weight:600; color:#495057; }
+.epf-batch-chip.current  { background:#003087; color:#fff; }
+.epf-batch-chip.approved { background:#d4edda; color:#155724; }
+.epf-batch-chip.rejected { background:#f8d7da; color:#721c24; }
+
+/* ── Alert cards (FSD #219–#225) ── */
+.epf-alert-card { border:1px solid #ddd; border-left:5px solid #003087; border-radius:6px;
+    padding:14px 18px; margin-bottom:10px; cursor:pointer; background:#fff; }
+.epf-alert-card:hover { background:#f4f7ff; }
+.epf-alert-card.epf-alert-error { border-left-color:#c0392b; }
+.epf-alert-card.epf-alert-warn  { border-left-color:#e67e22; }
+.epf-alert-card.epf-alert-ok    { border-left-color:#1e7e34; }
+.epf-alert-title { font-weight:700; font-size:14px; color:#003087; }
+.epf-alert-sub   { font-size:12px; color:#666; margin-top:3px; }
+.epf-error-banner { background:#f8d7da; color:#721c24; border-radius:6px; padding:12px 16px;
+    font-size:13px; margin-bottom:14px; }
+
+/* ── Modals ── */
+.epf-modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,.45); z-index:9998; }
+.epf-modal { background:#fff; border-radius:8px; width:520px; max-width:95%; padding:28px 32px;
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:9999;
+    box-shadow:0 8px 32px rgba(0,0,0,.25); display:none; }
+.epf-modal-wide { width:760px; }
+.epf-modal-header { font-size:18px; font-weight:700; color:#003087; margin-bottom:20px;
+    border-bottom:2px solid #003087; padding-bottom:10px; display:flex; justify-content:space-between; }
+.epf-modal-close { cursor:pointer; color:#888; font-size:20px; border:none; background:none; }
+.epf-modal-footer { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
+
+/* ── Tables ── */
+.epf-table { width:100%; border-collapse:collapse; font-size:13px; }
+.epf-table th { background:#003087; color:#fff; padding:8px 10px; text-align:left; }
+.epf-table td { padding:7px 10px; border-bottom:1px solid #eee; }
+.epf-row-greyed td { color:#aaa; background:#fafafa; }   /* FSD #327/#331 pending rows */
+input.epf-row-checkbox:disabled { opacity:0.35; cursor:not-allowed; }
+
+/* ── Settings checker old/new values (FSD #324) ── */
+.epf-old-value { text-decoration:line-through; color:#c0392b; margin-right:8px; }
+.epf-new-value { color:#1e7e34; font-weight:700; }
+
+/* ── Toggle (Lien Marked / Unmarked, FSD #239) ── */
+.epf-toggle { display:inline-flex; border:1px solid #003087; border-radius:18px; overflow:hidden; }
+.epf-toggle button { border:none; background:#fff; color:#003087; padding:6px 18px; font-size:13px; cursor:pointer; }
+.epf-toggle button.active { background:#003087; color:#fff; }
+
+/* ── Attention popup (top-right, FSD #245/#250/#253) ── */
+.epf-attention { position:fixed; top:70px; right:20px; z-index:10000; background:#fff;
+    border-left:5px solid #003087; border-radius:6px; box-shadow:0 4px 18px rgba(0,0,0,.2);
+    padding:16px 20px; width:360px; display:none; }
+.epf-attention-title { font-weight:700; color:#003087; margin-bottom:6px; }
+</style>
+
+<!-- ============================================================
+     SECTION A: PAGE 40 – Create Contribution Upload (4-step wizard)
+     Region: Static Content. Steps controlled by hidden P40_STEP.
+     ============================================================ -->
+
+<!-- ── Step progress bar (FSD #213: Create > Review > Alerts > Finish) ── -->
+<div class="epf-steps" id="epfWizardSteps">
+    <div class="epf-step" data-step="1">
+        <span class="epf-step-circle">1</span><span class="epf-step-label">Create</span><span class="epf-step-bar"></span>
+    </div>
+    <div class="epf-step" data-step="2">
+        <span class="epf-step-circle">2</span><span class="epf-step-label">Review</span><span class="epf-step-bar"></span>
+    </div>
+    <div class="epf-step" data-step="3">
+        <span class="epf-step-circle">3</span><span class="epf-step-label">Alerts</span><span class="epf-step-bar"></span>
+    </div>
+    <div class="epf-step" data-step="4">
+        <span class="epf-step-circle">4</span><span class="epf-step-label">Finish</span>
+    </div>
+</div>
+
+<!-- ── Step 1: Create (FSD #214–#217) ── -->
+<div class="epf-wizard-pane" data-pane="1">
+    <p><strong>To upload contribution file, follow these steps:</strong></p>
+    <ol style="font-size:13px;color:#444;">
+        <li>Download the sample CSV file available on this page.</li>
+        <li>Open sample file and enter all the required details.</li>
+        <li>Save the sample file on your computer or device, and assign a relevant name to it.</li>
+        <li>Upload the saved sample file on this page.</li>
+        <li>Upload scan of the instrument in the &lsquo;Upload Instrument&rsquo; field.</li>
+        <li>Proceed to the next step to upload contribution. In case of any errors,
+            the data in the file will have to be corrected and reuploaded.</li>
+    </ol>
+    <p style="font-size:12px;color:#888;">Note: Transactions uploaded after the fund&rsquo;s
+       cut-off timings will be processed on the next working day.</p>
+    <!-- APEX items rendered here: P40_FUND_ID, P40_FILE (File Browse),
+         P40_INSTRUMENT (File Browse), Download Sample File button -->
+    <div class="epf-toolbar">
+        <button class="epf-btn-plain"   onclick="epfDownloadSample()">Download Sample File</button>
+        <button class="epf-btn-primary" onclick="apex.submit('UPLOAD_FILE')">Upload</button>
+    </div>
+</div>
+
+<!-- ── Step 2: Review (FSD #218) – classic report over CONTRIB_UPLOAD collection ── -->
+<div class="epf-wizard-pane" data-pane="2" style="display:none;">
+    <div class="epf-toolbar">
+        <button class="epf-btn-plain"   onclick="$s('P40_STEP','1');apex.submit('GO_BACK')">Back</button>
+        <button class="epf-btn-primary" onclick="$s('P40_STEP','3');apex.submit('GO_ALERTS')">Next</button>
+    </div>
+    <!-- Region: Classic Report on APEX_COLLECTIONS 'CONTRIB_UPLOAD' (view only) -->
+</div>
+
+<!-- ── Step 3: Alerts (FSD #219–#225) ── -->
+<div class="epf-wizard-pane" data-pane="3" style="display:none;">
+    <div class="epf-error-banner" id="epfErrBanner" style="display:none;">
+        File cannot be uploaded. Please fix all errors and re-upload the file to proceed.
+        Please click on the errors in the &lsquo;Errors found&rsquo; section to view further details.
+    </div>
+
+    <!-- Valid entries (clickable, FSD #219.3) -->
+    <div class="epf-alert-card epf-alert-ok" onclick="epfOpenAlertPopup('VALID')">
+        <div class="epf-alert-title"><span id="epfValidCnt">0</span> of <span id="epfTotalCnt">0</span> entries are valid</div>
+        <div class="epf-alert-sub">Click to view the list of all valid entries</div>
+    </div>
+
+    <!-- Variance from last upload – amount (FSD #221) -->
+    <div class="epf-alert-card" onclick="epfOpenAlertPopup('VAR_AMOUNT')">
+        <div class="epf-alert-title">Variance from last upload &ndash; amount:
+            <span id="epfVarAmtPct">&ndash;</span>%</div>
+        <div class="epf-alert-sub">Change in total amount: <span id="epfVarAmtPkr">&ndash;</span> PKR.
+            Click for the per-employee variance table.</div>
+    </div>
+
+    <!-- Variance from last upload – employees (FSD #222) -->
+    <div class="epf-alert-card" onclick="epfOpenAlertPopup('VAR_EMP')">
+        <div class="epf-alert-title">Variance from last upload &ndash; employees:
+            <span id="epfVarEmpPct">&ndash;</span>%</div>
+        <div class="epf-alert-sub"><span id="epfVarEmpAdd">0</span> added,
+            <span id="epfVarEmpRem">0</span> removed. Click for details.</div>
+    </div>
+
+    <!-- Duplicate employees alert (FSD #223) -->
+    <div class="epf-alert-card epf-alert-warn" onclick="epfOpenAlertPopup('DUPLICATES')">
+        <div class="epf-alert-title"><span id="epfDupCnt">0</span> duplicate employees found (same CNIC + Folio)</div>
+        <div class="epf-alert-sub">If multiple entries need to be created against the same
+            employee, you can ignore this alert and proceed.</div>
+    </div>
+
+    <!-- Errors found (FSD #224) -->
+    <div class="epf-alert-card epf-alert-error" onclick="epfOpenAlertPopup('ERRORS')">
+        <div class="epf-alert-title">Errors found</div>
+        <div class="epf-alert-sub">
+            <span id="epfErrCnic">0</span> employees with incorrect CNIC &middot;
+            <span id="epfErrFolio">0</span> employees with incorrect Folio &middot;
+            <span id="epfErrNoExist">0</span> employees do not exist in the fund database
+        </div>
+    </div>
+
+    <div class="epf-toolbar">
+        <button class="epf-btn-plain" onclick="$s('P40_STEP','2');apex.submit('GO_BACK')">Back</button>
+        <!-- Next disabled while errors exist (FSD #225) -->
+        <button class="epf-btn-primary" id="epfAlertsNext" onclick="apex.submit('CREATE_BATCH')">Next</button>
+    </div>
+</div>
+
+<!-- ── Step 4: Finish (FSD #226) ── -->
+<div class="epf-wizard-pane" data-pane="4" style="display:none;">
+    <h3 style="color:#003087;">Contribution file has been uploaded and sent to the
+        <span id="epfNextHop">Checker</span> for approval</h3>
+    <p>Please visit the <a href="#" class="epf-btn-link"
+        onclick="apex.navigation.redirect('f?p=&APP_ID.:46:&SESSION.')">View All Contribution Uploads</a>
+        page for status updates.</p>
+    <p>Date &amp; Time: <span id="epfFinishDt">&P40_FINISH_DT.</span><br>
+       Reference No.: <strong>&P40_BATCH_NO.</strong></p>
+    <button class="epf-btn-primary"
+        onclick="apex.navigation.redirect('f?p=&APP_ID.:39:&SESSION.')">Finish</button>
+</div>
+
+<!-- ── Alert detail popup (download + close icons, FSD #221–#224) ── -->
+<div class="epf-modal-overlay" id="epfAlertOverlay"></div>
+<div class="epf-modal epf-modal-wide" id="epfAlertModal">
+    <div class="epf-modal-header">
+        <span id="epfAlertModalTitle">Alert Details</span>
+        <span>
+            <button class="epf-modal-close" title="Download Excel" onclick="epfDownloadAlertTable()">&#8681;</button>
+            <button class="epf-modal-close" onclick="epfCloseAlertPopup()">&times;</button>
+        </span>
+    </div>
+    <div id="epfAlertModalBody" style="max-height:420px;overflow:auto;"></div>
+</div>
+
+<!-- ============================================================
+     SECTION B: GENERIC CHECK PAGE TEMPLATE (Pages 50–55)
+     Checkbox table + Reject (remarks modal) + Approve (confirm).
+     FSD #299, #304, #308, #313, #317, #321.
+     ============================================================ -->
+
+<!-- ── Toolbar (above IR region) ── -->
+<div class="epf-toolbar">
+    <button class="epf-btn-danger"  onclick="epfOpenRejectModal()">Reject</button>
+    <button class="epf-btn-success" onclick="epfOpenApproveModal()">Approve</button>
+    <span id="epf-selected-count" style="font-size:13px;color:#666;"></span>
+</div>
+
+<!-- ── Batch checking progress bar (Page 50 only, FSD #299.3) ── -->
+<div class="epf-batch-progress" id="epfBatchProgress" style="display:none;">
+    <!-- JS renders one .epf-batch-chip per selected batch:
+         Batch No: 00120 > Batch No: 00121 > Batch No: 00122 -->
+</div>
+
+<!-- ── Reject remarks modal (remarks MANDATORY) ── -->
+<div class="epf-modal-overlay" id="epfRejectOverlay"></div>
+<div class="epf-modal" id="epfRejectModal">
+    <div class="epf-modal-header">
+        <span>Reject Requests</span>
+        <button class="epf-modal-close" onclick="epfCloseRejectModal()">&times;</button>
+    </div>
+    <p style="font-size:13px;">Please enter remarks for rejection. Remarks are mandatory.</p>
+    <textarea id="epfRejectRemarks" rows="4" maxlength="2000"
+        style="width:100%;border:1px solid #ccc;border-radius:5px;padding:8px;font-size:13px;"></textarea>
+    <div id="epfRemarksError" style="color:#c0392b;font-size:12px;display:none;margin-top:4px;">
+        Remarks are required for rejection.</div>
+    <div class="epf-modal-footer">
+        <button class="epf-btn-plain"  onclick="epfCloseRejectModal()">Cancel</button>
+        <button class="epf-btn-danger" onclick="epfSubmitReject()">Reject</button>
+    </div>
+</div>
+
+<!-- ── Approve confirmation modal (FSD: 'Are you sure...') ── -->
+<div class="epf-modal-overlay" id="epfApproveOverlay"></div>
+<div class="epf-modal" id="epfApproveModal">
+    <div class="epf-modal-header">
+        <span>Approve Requests</span>
+        <button class="epf-modal-close" onclick="epfCloseApproveModal()">&times;</button>
+    </div>
+    <p style="font-size:14px;">Are you sure you want to approve these requests?</p>
+    <div class="epf-modal-footer">
+        <button class="epf-btn-plain"   onclick="epfCloseApproveModal()">No</button>
+        <button class="epf-btn-success" onclick="epfSubmitApprove()">Yes</button>
+    </div>
+</div>
+
+<!-- ============================================================
+     SECTION C: PAGE 43 – Lien Mark / Unmark (FSD #239–#250)
+     ============================================================ -->
+
+<div class="epf-toolbar">
+    <!-- Toggle: table shows Lien Marked employees by default (FSD #240) -->
+    <div class="epf-toggle" id="epfLienToggle">
+        <button class="active" data-val="MARKED"   onclick="epfLienToggleTo('MARKED')">Lien Marked</button>
+        <button               data-val="UNMARKED" onclick="epfLienToggleTo('UNMARKED')">Lien Unmarked</button>
+    </div>
+    <!-- Button label flips with the toggle (FSD #239.2) -->
+    <button class="epf-btn-primary" id="epfLienActionBtn" onclick="epfLienAction()">Unmark Lien</button>
+</div>
+
+<!-- ── Lien confirmation modal (FSD #244, #249) ── -->
+<div class="epf-modal-overlay" id="epfLienOverlay"></div>
+<div class="epf-modal" id="epfLienModal">
+    <div class="epf-modal-header">
+        <span>Confirmation</span>
+        <button class="epf-modal-close" onclick="epfCloseLienModal()">&times;</button>
+    </div>
+    <!-- Outstanding-loan alert shows only when applicable (FSD #244.1) -->
+    <div id="epfLienLoanAlert" class="epf-error-banner" style="display:none;">
+        Alert: <span id="epfLienLoanCnt">0</span> of the selected employees have outstanding
+        loans, which will be marked as manually settled if you proceed.
+    </div>
+    <p style="font-size:14px;" id="epfLienConfirmText">
+        Are you sure you want to unmark lien for these <span id="epfLienSelCnt">0</span> employees?</p>
+    <div class="epf-modal-footer">
+        <button class="epf-btn-plain"   onclick="epfCloseLienModal()">No</button>
+        <button class="epf-btn-primary" onclick="epfSubmitLien()">Yes</button>
+    </div>
+</div>
+
+<!-- ── Attention popup after submit (FSD #245/#250) ── -->
+<div class="epf-attention" id="epfAttention">
+    <div class="epf-attention-title">Attention</div>
+    <div id="epfAttentionText">
+        Request has been sent to the Checker for approval. Please visit the
+        <a href="#" class="epf-btn-link"
+           onclick="apex.navigation.redirect('f?p=&APP_ID.:48:&SESSION.')">View All Lien Requests</a>
+        page for status updates.
+    </div>
+</div>
+
+<!-- ============================================================
+     SECTION D: PAGE 60 – Settings (Checker view, FSD #322–#334)
+     ============================================================ -->
+
+<!-- ── Saved / Updated settings with strikethrough-old / green-new
+        values (FSD #324.2).  Substituted by APEX report/PLSQL. ── -->
+<div class="epf-settings-card" style="border:1px solid #ddd;border-radius:8px;padding:18px 22px;margin-bottom:18px;">
+    <h4 style="color:#003087;margin-top:0;">Saved / Updated Loan Settings</h4>
+    <table class="epf-table" style="max-width:560px;">
+        <tr><td>Interest Type</td>
+            <td><span class="epf-new-value">#INTEREST_TYPE#</span></td></tr>
+        <tr><td>Floating Rate Tenure</td>
+            <td><span class="epf-old-value">#OLD_TENURE#</span>
+                <span class="epf-new-value">#NEW_TENURE#</span></td></tr>
+        <tr><td>Interest Rate</td>
+            <td><span class="epf-old-value">#OLD_RATE#%</span>
+                <span class="epf-new-value">#NEW_RATE#%</span></td></tr>
+        <tr><td>Loan Limit (% of total balance)</td>
+            <td><span class="epf-old-value">#OLD_LIMIT#%</span>
+                <span class="epf-new-value">#NEW_LIMIT#%</span></td></tr>
+        <tr><td>Max Instalment Period</td>
+            <td><span class="epf-old-value">#OLD_MONTHS# months</span>
+                <span class="epf-new-value">#NEW_MONTHS# months</span></td></tr>
+    </table>
+    <!-- Reject / Approve only rendered when pending changes exist (FSD #324.3) -->
+    <div class="epf-toolbar" style="margin-top:14px;">
+        <button class="epf-btn-plain">History</button>
+        <button class="epf-btn-danger"  onclick="epfOpenRejectModal()">Reject</button>
+        <button class="epf-btn-success" onclick="epfOpenApproveModal()">Approve</button>
+    </div>
+</div>
+
+<!-- ── Pending Requests section (FSD #325/#329).  Hidden when no
+        pending rows (server-side condition on the region). ── -->
+<div class="epf-settings-card" style="border:1px solid #ddd;border-radius:8px;padding:18px 22px;margin-bottom:18px;">
+    <h4 style="color:#003087;margin-top:0;">Pending Requests</h4>
+    <div class="epf-toolbar">
+        <!-- APEX select item P60_REQUEST_TYPE_FILTER: All / Pending Deletion / Pending Addition -->
+        <span style="font-size:13px;">Request Type:</span>
+        <select id="epfReqTypeFilter" onchange="epfFilterPending(this.value)">
+            <option value="ALL">All</option>
+            <option value="PENDING_DELETION">Pending Deletion</option>
+            <option value="PENDING_ADDITION">Pending Addition</option>
+        </select>
+        <button class="epf-btn-danger"  onclick="epfOpenRejectModal('FEATURE_REJECT')">Reject</button>
+        <button class="epf-btn-success" onclick="epfOpenApproveModal('FEATURE_APPROVE')">Approve</button>
+    </div>
+    <!-- IR region: feature-access pending-requests query (see ir_queries.sql) -->
+</div>
+
+<!-- ── Realloc group header template (FSD #332–#334) ── -->
+<div class="epf-settings-card" style="border:1px solid #ddd;border-radius:8px;padding:18px 22px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h4 style="color:#003087;margin:0;">
+            <span class="epf-old-value">#OLD_GROUP_NAME#</span>
+            <span class="epf-new-value">#NEW_GROUP_NAME#</span>
+        </h4>
+        <span>
+            <!-- Pending groups: Reject / Approve in header (FSD #332).
+                 Approved groups (Maker view): Delete / Edit (FSD #293). -->
+            <button class="epf-btn-danger"  onclick="epfDecideGroup(#GROUP_ID#,'GROUP_REJECT')">Reject</button>
+            <button class="epf-btn-success" onclick="epfDecideGroup(#GROUP_ID#,'GROUP_APPROVE')">Approve</button>
+        </span>
+    </div>
+    <p style="font-size:13px;">Maximum Limit &ndash;
+        Money Market: <span class="epf-old-value">#OLD_MM#%</span><span class="epf-new-value">#NEW_MM#%</span> &middot;
+        Debt: <span class="epf-old-value">#OLD_DEBT#%</span><span class="epf-new-value">#NEW_DEBT#%</span> &middot;
+        Equity: <span class="epf-old-value">#OLD_EQ#%</span><span class="epf-new-value">#NEW_EQ#%</span></p>
+    <!-- IR region: realloc group members query (see ir_queries.sql) -->
+</div>
+
+<!-- ============================================================
+     SECTION E: SHARED JAVASCRIPT
+     Paste into Page > JavaScript > Function and Global Variable
+     Declaration on each page that uses these templates.
+     ============================================================ -->
+<script>
+/* ── Selection tracking (checkbox tables) ───────────────────── */
+var epfSelectedIds = [];
+
+$(document).on('change', '.epf-row-checkbox', function(){
+    var id = $(this).data('id');
+    if (this.checked) { if (epfSelectedIds.indexOf(id) < 0) epfSelectedIds.push(id); }
+    else { epfSelectedIds = epfSelectedIds.filter(function(v){ return v !== id; }); }
+    $('#epf-selected-count').text(epfSelectedIds.length ? epfSelectedIds.length + ' selected' : '');
+});
+
+/* Batch checkbox selects/unselects all its rows (FSD #299.1) */
+$(document).on('change', '.epf-batch-checkbox', function(){
+    var batch = $(this).data('batch'), checked = this.checked;
+    $('.epf-row-checkbox[data-batch="' + batch + '"]').prop('checked', checked).trigger('change');
+});
+
+function epfSelectedAsColonList(){ return epfSelectedIds.join(':'); }
+
+/* ── Wizard step control (Page 40/41/42) ────────────────────── */
+function epfShowStep(step){
+    $('.epf-wizard-pane').hide();
+    $('.epf-wizard-pane[data-pane="' + step + '"]').show();
+    $('.epf-step').removeClass('active done');
+    $('.epf-step').each(function(){
+        var s = parseInt($(this).data('step'), 10);
+        if (s < step) $(this).addClass('done');
+        if (s === parseInt(step, 10)) $(this).addClass('active');
+    });
+}
+/* On page load: epfShowStep($v('P40_STEP') || 1); */
+
+/* ── Reject remarks modal (mandatory remarks) ───────────────── */
+var epfRejectRequest = 'REJECT_SELECTED';
+function epfOpenRejectModal(req){
+    if (epfSelectedIds.length === 0 && !$v('P60_GROUP_ID')) {
+        apex.message.alert('Please select at least one request.');
+        return;
+    }
+    epfRejectRequest = req || 'REJECT_SELECTED';
+    $('#epfRemarksError').hide();
+    $('#epfRejectRemarks').val('');
+    $('#epfRejectOverlay,#epfRejectModal').show();
+}
+function epfCloseRejectModal(){ $('#epfRejectOverlay,#epfRejectModal').hide(); }
+function epfSubmitReject(){
+    var remarks = $('#epfRejectRemarks').val().trim();
+    if (!remarks) { $('#epfRemarksError').show(); return; }   // remarks mandatory
+    epfSetSelectionItems();
+    $s(epfRemarksItem(), remarks);
+    apex.submit(epfRejectRequest);
+}
+
+/* ── Approve confirm modal ──────────────────────────────────── */
+var epfApproveRequest = 'APPROVE_SELECTED';
+function epfOpenApproveModal(req){
+    if (epfSelectedIds.length === 0 && !$v('P60_GROUP_ID')) {
+        apex.message.alert('Please select at least one request.');
+        return;
+    }
+    epfApproveRequest = req || 'APPROVE_SELECTED';
+    $('#epfApproveOverlay,#epfApproveModal').show();
+}
+function epfCloseApproveModal(){ $('#epfApproveOverlay,#epfApproveModal').hide(); }
+function epfSubmitApprove(){
+    epfSetSelectionItems();
+    apex.submit(epfApproveRequest);
+}
+
+/* Resolve the per-page selection / remarks items from the page number */
+function epfSelectionItem(){ return 'P' + $v('pFlowStepId') + '_SELECTED_IDS'; }
+function epfRemarksItem(){   return 'P' + $v('pFlowStepId') + '_REMARKS'; }
+function epfSetSelectionItems(){
+    var item = epfSelectionItem();
+    if (apex.item(item).node.length || document.getElementById(item)) {
+        $s(item, epfSelectedAsColonList());
+    }
+}
+
+/* ── Page 43: Lien toggle + confirm (FSD #239–#250) ─────────── */
+function epfLienToggleTo(val){
+    $('#epfLienToggle button').removeClass('active');
+    $('#epfLienToggle button[data-val="' + val + '"]').addClass('active');
+    $('#epfLienActionBtn').text(val === 'MARKED' ? 'Unmark Lien' : 'Mark Lien');
+    epfSelectedIds = [];
+    $s('P43_TOGGLE', val);
+    apex.region('lienIR') && apex.region('lienIR').refresh();
+}
+function epfLienAction(){
+    if (epfSelectedIds.length === 0) {
+        apex.message.alert('Please select at least one employee');   // FSD #243/#249
+        return;
+    }
+    var marking = $v('P43_TOGGLE') !== 'MARKED';   // UNMARKED toggle → Mark Lien
+    $('#epfLienSelCnt').text(epfSelectedIds.length);
+    $('#epfLienConfirmText').html('Are you sure you want to '
+        + (marking ? 'mark' : 'unmark') + ' lien for these <b>'
+        + epfSelectedIds.length + '</b> employees?');
+    // Outstanding-loans alert only when unmarking (server precomputes count)
+    var loanCnt = parseInt($v('P43_LOAN_WARNING') || '0', 10);
+    if (!marking && loanCnt > 0) {
+        $('#epfLienLoanCnt').text(loanCnt);
+        $('#epfLienLoanAlert').show();
+    } else { $('#epfLienLoanAlert').hide(); }
+    $('#epfLienOverlay,#epfLienModal').show();
+}
+function epfCloseLienModal(){ $('#epfLienOverlay,#epfLienModal').hide(); }
+function epfSubmitLien(){
+    $s('P43_SELECTED_FOLIO_IDS', epfSelectedAsColonList());
+    apex.submit($v('P43_TOGGLE') === 'MARKED' ? 'UNMARK_LIEN' : 'MARK_LIEN');
+}
+
+/* ── Attention popup (FSD #245/#250/#253) ───────────────────── */
+function epfShowAttention(text){
+    if (text) $('#epfAttentionText').html(text);
+    $('#epfAttention').fadeIn(200);
+    setTimeout(function(){ $('#epfAttention').fadeOut(400); }, 8000);
+}
+
+/* ── Page 40: Alert popups (FSD #220–#224) ──────────────────── */
+function epfOpenAlertPopup(kind){
+    var titles = {
+        'VALID':      'Valid entries',
+        'VAR_AMOUNT': 'Variance from last upload - amount',
+        'VAR_EMP':    'Variance from last upload - employees',
+        'DUPLICATES': 'Alerts - duplicate employees found (same CNIC + Folio)',
+        'ERRORS':     'Errors'
+    };
+    $('#epfAlertModalTitle').text(titles[kind] || 'Details');
+    apex.server.process('GET_ALERT_DETAIL_AJAX',
+        { x01: kind, x02: $v('P40_BATCH_ID') },
+        { success: function(html){
+            $('#epfAlertModalBody').html(html);
+            $('#epfAlertOverlay,#epfAlertModal').show();
+        }});
+}
+function epfCloseAlertPopup(){ $('#epfAlertOverlay,#epfAlertModal').hide(); }
+function epfDownloadAlertTable(){
+    apex.navigation.redirect('f?p=&APP_ID.:0:&SESSION.:APPLICATION_PROCESS=DOWNLOAD_ALERT_XLSX:::'
+        + 'X01:' + $v('P40_BATCH_ID'));
+}
+function epfDownloadSample(){
+    apex.navigation.redirect('f?p=&APP_ID.:0:&SESSION.:APPLICATION_PROCESS=DOWNLOAD_CONTRIB_SAMPLE');
+}
+
+/* ── Page 50: batch progress chips (FSD #299.3) ─────────────── */
+function epfRenderBatchProgress(batchNos, currentIdx, decisions){
+    var html = '';
+    batchNos.forEach(function(b, i){
+        var cls = 'epf-batch-chip';
+        if (decisions[i] === 'A') cls += ' approved';
+        else if (decisions[i] === 'R') cls += ' rejected';
+        else if (i === currentIdx) cls += ' current';
+        html += '<span class="' + cls + '">Batch No: ' + b + '</span>';
+        if (i < batchNos.length - 1) html += ' &gt; ';
+    });
+    $('#epfBatchProgress').html(html).show();
+}
+
+/* ── Page 51: Instalment schedule popup (FSD #303) ──────────── */
+$(document).on('click', '.epf-view-schedule', function(){
+    $s('P51_VIEW_LOAN_ID', $(this).data('loan-id'));
+    apex.region('schedulePopup') && apex.region('schedulePopup').refresh();
+    $('#epfScheduleOverlay,#epfScheduleModal').show();
+});
+
+/* ── Page 60: helpers ───────────────────────────────────────── */
+function epfFilterPending(val){
+    $s('P60_REQUEST_TYPE_FILTER', val);
+    apex.region('pendingRequestsIR') && apex.region('pendingRequestsIR').refresh();
+}
+function epfDecideGroup(groupId, request){
+    $s('P60_GROUP_ID', groupId);
+    if (request === 'GROUP_REJECT') { epfOpenRejectModal(request); }
+    else { epfOpenApproveModal(request); }
+}
+</script>
+
+<!-- ── Instalment schedule modal shell (Page 51) ── -->
+<div class="epf-modal-overlay" id="epfScheduleOverlay"></div>
+<div class="epf-modal epf-modal-wide" id="epfScheduleModal">
+    <div class="epf-modal-header">
+        <span>Instalment Schedule</span>
+        <button class="epf-modal-close" onclick="$('#epfScheduleOverlay,#epfScheduleModal').hide()">&times;</button>
+    </div>
+    <!-- Region 'schedulePopup': classic report on the Page 51 schedule
+         query (ir_queries.sql).  Header shows Tenure, Total Repayable,
+         Loan Amount, Interest Amount per FSD #232. -->
+    <div id="epfScheduleBody" style="max-height:420px;overflow:auto;"></div>
+</div>
+
+<!-- ============================================================
+     End of html_templates.html
+     ============================================================ -->

@@ -229,13 +229,14 @@ PROCEDURE SAVE_COMPANY_USER (
     p_out_success        OUT VARCHAR2,
     p_out_message        OUT VARCHAR2
 ) IS
-    v_err        VARCHAR2(500);
-    v_user_id    NUMBER;
-    v_cnt        NUMBER;
-    v_salt       RAW(32);
-    v_hash       RAW(64);
-    v_pwd        VARCHAR2(100) := 'EPF@2024!';
+    v_err            VARCHAR2(500);
+    v_user_id        NUMBER;
+    v_cnt            NUMBER;
+    v_salt           RAW(32);
+    v_hash           RAW(64);
+    v_pwd            VARCHAR2(100) := 'EPF@2024!';
     v_status_pending NUMBER := GET_STATUS_ID('USER_STATUS','PENDING');
+    v_deleted_sid    NUMBER := GET_STATUS_ID('USER_STATUS','DELETED');
 BEGIN
     -- Validate
     v_err := VALIDATE_EMAIL(p_email);    IF v_err IS NOT NULL THEN p_out_success:='N'; p_out_message:=v_err; RETURN; END IF;
@@ -249,7 +250,7 @@ BEGIN
     JOIN   EPF_USERS u ON u.USER_ID = uc.USER_ID
     WHERE  uc.COMPANY_ID     = p_company_id
     AND    LOWER(u.EMAIL)    = LOWER(p_email)
-    AND    uc.STATUS_ID     != GET_STATUS_ID('USER_STATUS','DELETED')
+    AND    uc.STATUS_ID     != v_deleted_sid
     AND    (p_user_company_id IS NULL OR uc.USER_COMPANY_ID != p_user_company_id);
 
     IF v_cnt > 0 THEN
@@ -271,10 +272,10 @@ BEGIN
         WHERE USER_ID = v_user_id;
     EXCEPTION WHEN NO_DATA_FOUND THEN
         -- New user
-        v_salt := DBMS_CRYPTO.RANDOMBYTES(32);
-        v_hash := DBMS_CRYPTO.HASH(
+        v_salt := UC_CRYPTO.RANDOMBYTES(32);
+        v_hash := UC_CRYPTO.HASH(
                       UTL_RAW.CAST_TO_RAW(v_pwd) || v_salt,
-                      DBMS_CRYPTO.HASH_SH512);
+                      UC_CRYPTO.HASH_SH512);
         INSERT INTO EPF_USERS
             (FULL_NAME, EMAIL, CNIC, MOBILE_NO, EMPLOYEE_CODE,
              PASSWORD_HASH, PASSWORD_SALT, STATUS_ID,
@@ -299,15 +300,24 @@ BEGIN
     VALUES
         (v_user_id, p_company_id, p_folio_id, v_status_pending, p_performed_by, SYSDATE);
 
-    -- UPSERT role assignment
-    SELECT COUNT(*) INTO v_cnt
-    FROM   EPF_USER_COMP_ROLES
-    WHERE  USER_ID = v_user_id AND COMPANY_ID = p_company_id AND ROLE_ID = p_role_id;
+    -- UPSERT role assignment via USER_COMPANY_ID
+    DECLARE v_uc_id NUMBER; BEGIN
+        SELECT USER_COMPANY_ID INTO v_uc_id
+        FROM   EPF_USER_COMPANIES
+        WHERE  USER_ID = v_user_id AND COMPANY_ID = p_company_id;
 
-    IF v_cnt = 0 THEN
-        INSERT INTO EPF_USER_COMP_ROLES (USER_ID, COMPANY_ID, ROLE_ID, CREATED_BY, CREATED_DATE)
-        VALUES (v_user_id, p_company_id, p_role_id, p_performed_by, SYSDATE);
-    END IF;
+        SELECT COUNT(*) INTO v_cnt
+        FROM   EPF_USER_COMP_ROLES
+        WHERE  USER_COMPANY_ID = v_uc_id AND ROLE_ID = p_role_id;
+
+        IF v_cnt = 0 THEN
+            INSERT INTO EPF_USER_COMP_ROLES (USER_COMPANY_ID, ROLE_ID, IS_ACTIVE, CREATED_BY, CREATED_DATE)
+            VALUES (v_uc_id, p_role_id, 'Y', p_performed_by, SYSDATE);
+        ELSE
+            UPDATE EPF_USER_COMP_ROLES SET IS_ACTIVE = 'Y', UPDATED_BY = p_performed_by, UPDATED_DATE = SYSDATE
+            WHERE  USER_COMPANY_ID = v_uc_id AND ROLE_ID = p_role_id;
+        END IF;
+    END;
 
     -- Mark Tab 2 complete
     UPDATE EPF_ONBOARDING_SUBMISSIONS
@@ -445,16 +455,18 @@ BEGIN
 
     -- Must have at least 1 Corp Admin
     SELECT COUNT(*) INTO v_admin_cnt
-    FROM   EPF_USER_COMP_ROLES
-    WHERE  COMPANY_ID = p_company_id AND ROLE_ID = 5;
+    FROM   EPF_USER_COMP_ROLES ucr
+    JOIN   EPF_USER_COMPANIES  uc  ON uc.USER_COMPANY_ID = ucr.USER_COMPANY_ID
+    WHERE  uc.COMPANY_ID = p_company_id AND ucr.ROLE_ID = 5 AND ucr.IS_ACTIVE = 'Y';
     IF v_admin_cnt = 0 THEN
         p_out_success:='N'; p_out_message:='At least one Corporate Admin (role) must be assigned.'; RETURN;
     END IF;
 
     -- Must have at least 1 Authorizer
     SELECT COUNT(*) INTO v_auth_cnt
-    FROM   EPF_USER_COMP_ROLES
-    WHERE  COMPANY_ID = p_company_id AND ROLE_ID = 8;
+    FROM   EPF_USER_COMP_ROLES ucr
+    JOIN   EPF_USER_COMPANIES  uc  ON uc.USER_COMPANY_ID = ucr.USER_COMPANY_ID
+    WHERE  uc.COMPANY_ID = p_company_id AND ucr.ROLE_ID = 8 AND ucr.IS_ACTIVE = 'Y';
     IF v_auth_cnt = 0 THEN
         p_out_success:='N'; p_out_message:='At least one Corporate Authorizer (role) must be assigned.'; RETURN;
     END IF;
@@ -469,12 +481,14 @@ BEGIN
         UPDATED_BY     = p_user_id,
         UPDATED_DATE   = SYSDATE
     WHERE COMPANY_ID = p_company_id;
+    DECLARE v_uc_pend NUMBER := GET_STATUS_ID('USER_STATUS','PENDING'); BEGIN
     UPDATE EPF_USER_COMPANIES SET
         STATUS_ID    = v_pend,
         UPDATED_BY   = p_user_id,
         UPDATED_DATE = SYSDATE
     WHERE COMPANY_ID = p_company_id
-    AND   STATUS_ID  = GET_STATUS_ID('USER_STATUS','PENDING');
+    AND   STATUS_ID  = v_uc_pend;
+    END;
 
     COMMIT;
     LOG_ACTIVITY('CLIENT', p_company_id, 'SUBMIT_TO_CHECKER', NULL, p_user_id);
@@ -493,9 +507,11 @@ PROCEDURE CHECKER_APPROVE (
     p_out_success        OUT VARCHAR2,
     p_out_message        OUT VARCHAR2
 ) IS
-    v_active  NUMBER := GET_STATUS_ID('CLIENT_STATUS','ACTIVE');
-    v_pend    NUMBER := GET_STATUS_ID('CLIENT_STATUS','PENDING_CHECKER');
-    v_cur     NUMBER;
+    v_active      NUMBER := GET_STATUS_ID('CLIENT_STATUS','ACTIVE');
+    v_pend        NUMBER := GET_STATUS_ID('CLIENT_STATUS','PENDING_CHECKER');
+    v_uc_active   NUMBER := GET_STATUS_ID('USER_STATUS','ACTIVE');
+    v_uc_pend     NUMBER := GET_STATUS_ID('USER_STATUS','PENDING');
+    v_cur         NUMBER;
 BEGIN
     SELECT STATUS_ID INTO v_cur FROM EPF_COMPANIES WHERE COMPANY_ID = p_company_id;
     IF v_cur != v_pend THEN
@@ -514,19 +530,19 @@ BEGIN
     WHERE COMPANY_ID = p_company_id;
 
     UPDATE EPF_USER_COMPANIES SET
-        STATUS_ID = GET_STATUS_ID('USER_STATUS','ACTIVE'),
+        STATUS_ID = v_uc_active,
         UPDATED_BY = p_checker_id, UPDATED_DATE = SYSDATE
     WHERE COMPANY_ID = p_company_id
-    AND   STATUS_ID IN (GET_STATUS_ID('USER_STATUS','PENDING'), v_pend);
+    AND   STATUS_ID IN (v_uc_pend, v_pend);
 
     UPDATE EPF_USERS SET
-        STATUS_ID = GET_STATUS_ID('USER_STATUS','ACTIVE'),
+        STATUS_ID = v_uc_active,
         UPDATED_BY = p_checker_id, UPDATED_DATE = SYSDATE
     WHERE USER_ID IN (
         SELECT USER_ID FROM EPF_USER_COMPANIES
         WHERE  COMPANY_ID = p_company_id
     )
-    AND STATUS_ID = GET_STATUS_ID('USER_STATUS','PENDING');
+    AND STATUS_ID = v_uc_pend;
 
     UPDATE EPF_FOLIOS SET
         STATUS_ID = v_active,
@@ -571,9 +587,10 @@ PROCEDURE CHECKER_REVERT (
     p_out_success        OUT VARCHAR2,
     p_out_message        OUT VARCHAR2
 ) IS
-    v_draft   NUMBER := GET_STATUS_ID('CLIENT_STATUS','DRAFT');
-    v_pend    NUMBER := GET_STATUS_ID('CLIENT_STATUS','PENDING_CHECKER');
-    v_cur     NUMBER;
+    v_draft     NUMBER := GET_STATUS_ID('CLIENT_STATUS','DRAFT');
+    v_pend      NUMBER := GET_STATUS_ID('CLIENT_STATUS','PENDING_CHECKER');
+    v_uc_pend   NUMBER := GET_STATUS_ID('USER_STATUS','PENDING');
+    v_cur       NUMBER;
 BEGIN
     IF p_revert_remarks IS NULL OR TRIM(p_revert_remarks) IS NULL THEN
         p_out_success:='N'; p_out_message:='Revert remarks are mandatory.'; RETURN;
@@ -596,7 +613,7 @@ BEGIN
     WHERE COMPANY_ID = p_company_id;
 
     UPDATE EPF_USER_COMPANIES SET
-        STATUS_ID    = GET_STATUS_ID('USER_STATUS','PENDING'),
+        STATUS_ID    = v_uc_pend,
         UPDATED_BY   = p_checker_id,
         UPDATED_DATE = SYSDATE
     WHERE COMPANY_ID = p_company_id

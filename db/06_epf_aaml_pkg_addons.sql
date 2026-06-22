@@ -363,9 +363,11 @@ END SUBMIT_TO_CHECKER;
 --  CHECKER_APPROVE  (confirmed signature)
 -- ══════════════════════════════════════════════════════════════
 PROCEDURE CHECKER_APPROVE (p_company_id IN NUMBER, p_remarks IN VARCHAR2, p_approved_by IN NUMBER) IS
-    v_active NUMBER := GET_SID('CLIENT_STATUS','ACTIVE');
-    v_pend   NUMBER := GET_SID('CLIENT_STATUS','PENDING_CHECKER');
-    v_cur    NUMBER;
+    v_active    NUMBER := GET_SID('CLIENT_STATUS','ACTIVE');
+    v_pend      NUMBER := GET_SID('CLIENT_STATUS','PENDING_CHECKER');
+    v_uc_active NUMBER := GET_SID('USER_STATUS','ACTIVE');
+    v_uc_pend   NUMBER := GET_SID('USER_STATUS','PENDING');
+    v_cur       NUMBER;
 BEGIN
     SELECT STATUS_ID INTO v_cur FROM EPF_COMPANIES WHERE COMPANY_ID = p_company_id;
     IF v_cur != v_pend THEN
@@ -380,12 +382,12 @@ BEGIN
     WHERE COMPANY_ID=p_company_id;
 
     UPDATE EPF_USER_COMPANIES SET
-        STATUS_ID=GET_SID('USER_STATUS','ACTIVE'),UPDATED_BY=p_approved_by,UPDATED_DATE=SYSDATE
+        STATUS_ID=v_uc_active,UPDATED_BY=p_approved_by,UPDATED_DATE=SYSDATE
     WHERE COMPANY_ID=p_company_id
     AND   EPF_STATUS_PKG.GET_CODE(STATUS_ID) IN ('PENDING','PENDING_CHECKER');
 
     UPDATE EPF_USERS SET
-        STATUS_ID=GET_SID('USER_STATUS','ACTIVE'),UPDATED_BY=p_approved_by,UPDATED_DATE=SYSDATE
+        STATUS_ID=v_uc_active,UPDATED_BY=p_approved_by,UPDATED_DATE=SYSDATE
     WHERE USER_ID IN (
         SELECT USER_ID FROM EPF_USER_COMPANIES WHERE COMPANY_ID=p_company_id
     ) AND EPF_STATUS_PKG.GET_CODE(STATUS_ID)='PENDING';
@@ -446,9 +448,10 @@ END CHECKER_REJECT;
 --  CHECKER_REVERT  (send back to Maker for corrections)
 -- ══════════════════════════════════════════════════════════════
 PROCEDURE CHECKER_REVERT (p_company_id IN NUMBER, p_remarks IN VARCHAR2, p_reverted_by IN NUMBER) IS
-    v_draft NUMBER := GET_SID('CLIENT_STATUS','DRAFT');
-    v_pend  NUMBER := GET_SID('CLIENT_STATUS','PENDING_CHECKER');
-    v_cur   NUMBER;
+    v_draft   NUMBER := GET_SID('CLIENT_STATUS','DRAFT');
+    v_pend    NUMBER := GET_SID('CLIENT_STATUS','PENDING_CHECKER');
+    v_uc_pend NUMBER := GET_SID('USER_STATUS','PENDING');
+    v_cur     NUMBER;
 BEGIN
     IF p_remarks IS NULL OR TRIM(p_remarks) IS NULL THEN
         RAISE_APPLICATION_ERROR(-20030,'Revert remarks are required.');
@@ -466,7 +469,7 @@ BEGIN
     WHERE COMPANY_ID=p_company_id;
 
     UPDATE EPF_USER_COMPANIES SET
-        STATUS_ID=GET_SID('USER_STATUS','PENDING'),UPDATED_BY=p_reverted_by,UPDATED_DATE=SYSDATE
+        STATUS_ID=v_uc_pend,UPDATED_BY=p_reverted_by,UPDATED_DATE=SYSDATE
     WHERE COMPANY_ID=p_company_id
     AND   EPF_STATUS_PKG.GET_CODE(STATUS_ID)='PENDING_CHECKER';
 
@@ -540,8 +543,8 @@ BEGIN
             UPDATED_BY=p_performed_by,UPDATED_DATE=SYSDATE
         WHERE USER_ID=v_user_id;
     EXCEPTION WHEN NO_DATA_FOUND THEN
-        v_salt := DBMS_CRYPTO.RANDOMBYTES(32);
-        v_hash := DBMS_CRYPTO.HASH(UTL_RAW.CAST_TO_RAW('EPF@2024!')||v_salt, DBMS_CRYPTO.HASH_SH512);
+        v_salt := UC_CRYPTO.RANDOMBYTES(32);
+        v_hash := UC_CRYPTO.HASH(UTL_RAW.CAST_TO_RAW('EPF@2024!')||v_salt, UC_CRYPTO.HASH_SH512);
         INSERT INTO EPF_USERS (FULL_NAME,EMAIL,CNIC,MOBILE_NO,EMPLOYEE_CODE,
             PASSWORD_HASH,PASSWORD_SALT,STATUS_ID,FORCE_PWD_CHANGE,CREATED_BY,CREATED_DATE)
         VALUES (p_full_name,LOWER(p_email),p_cnic,p_mobile_no,p_employee_code,

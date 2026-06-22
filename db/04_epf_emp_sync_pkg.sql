@@ -28,8 +28,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMP_SYNC_PKG AS
 -- ── Private: hash a password ──────────────────────────────────
 FUNCTION HASH_PASSWORD (p_pwd IN VARCHAR2, p_salt OUT RAW) RETURN RAW IS
 BEGIN
-    p_salt := DBMS_CRYPTO.RANDOMBYTES(32);
-    RETURN DBMS_CRYPTO.HASH(UTL_RAW.CAST_TO_RAW(p_pwd) || p_salt, DBMS_CRYPTO.HASH_SH512);
+    p_salt := UC_CRYPTO.RANDOMBYTES(32);
+    RETURN UC_CRYPTO.HASH(UTL_RAW.CAST_TO_RAW(p_pwd) || p_salt, UC_CRYPTO.HASH_SH512);
 END HASH_PASSWORD;
 
 -- ============================================================
@@ -108,9 +108,11 @@ BEGIN
     p_out_count := v_folio_cnt;
 EXCEPTION WHEN OTHERS THEN
     ROLLBACK;
-    INSERT INTO EPF_ACTIVITY_LOG (ENTITY_TYPE, ENTITY_ID, ACTION_CODE, REMARKS, PERFORMED_BY, PERFORMED_DATE)
-    VALUES ('SYNC', p_company_id, 'DFN_FETCH_ERROR', SQLERRM, 0, SYSDATE);
-    COMMIT;
+    DECLARE v_err VARCHAR2(4000) := SQLERRM; BEGIN
+        INSERT INTO EPF_ACTIVITY_LOG (ENTITY_TYPE, ENTITY_ID, ACTION_CODE, REMARKS, PERFORMED_BY, PERFORMED_DATE)
+        VALUES ('SYNC', p_company_id, 'DFN_FETCH_ERROR', v_err, 0, SYSDATE);
+        COMMIT;
+    END;
     RAISE;
 END FETCH_FROM_DFN_API;
 
@@ -131,9 +133,14 @@ PROCEDURE PROCESS_STAGING_BATCH (
     v_role_emp     CONSTANT NUMBER := 9;
     v_processed    NUMBER := 0;
     v_pwd          CONSTANT VARCHAR2(20) := 'EPF@2024!';
+    v_folio_status NUMBER;
 BEGIN
-    v_status_pend := (SELECT STATUS_ID FROM EPF_STATUSES WHERE CATEGORY_CODE='USER_STATUS' AND STATUS_CODE='PENDING' AND ROWNUM=1);
-    v_status_act  := (SELECT STATUS_ID FROM EPF_STATUSES WHERE CATEGORY_CODE='USER_STATUS' AND STATUS_CODE='ACTIVE'  AND ROWNUM=1);
+    SELECT STATUS_ID INTO v_status_pend FROM EPF_STATUSES
+    WHERE  CATEGORY_CODE = 'USER_STATUS' AND STATUS_CODE = 'PENDING' AND ROWNUM = 1;
+    SELECT STATUS_ID INTO v_status_act  FROM EPF_STATUSES
+    WHERE  CATEGORY_CODE = 'USER_STATUS' AND STATUS_CODE = 'ACTIVE'  AND ROWNUM = 1;
+    SELECT STATUS_ID INTO v_folio_status FROM EPF_STATUSES
+    WHERE  CATEGORY_CODE = 'CLIENT_STATUS' AND STATUS_CODE = 'PENDING_CHECKER' AND ROWNUM = 1;
 
     FOR stg IN (
         SELECT * FROM EPF_EMP_API_STAGING
@@ -152,9 +159,7 @@ BEGIN
                 AND    FOLIO_NUMBER = stg.FOLIO_NUMBER;
             EXCEPTION WHEN NO_DATA_FOUND THEN
                 INSERT INTO EPF_FOLIOS (COMPANY_ID, FOLIO_NUMBER, DFN_FOLIO_ID, STATUS_ID, CREATED_BY, CREATED_DATE)
-                VALUES (p_company_id, stg.FOLIO_NUMBER, stg.DFN_FOLIO_ID,
-                        (SELECT STATUS_ID FROM EPF_STATUSES WHERE CATEGORY_CODE='CLIENT_STATUS' AND STATUS_CODE='PENDING_CHECKER' AND ROWNUM=1),
-                        0, SYSDATE)
+                VALUES (p_company_id, stg.FOLIO_NUMBER, stg.DFN_FOLIO_ID, v_folio_status, 0, SYSDATE)
                 RETURNING FOLIO_ID INTO v_folio_id;
             END;
 
@@ -213,14 +218,21 @@ BEGIN
                     (v_user_id, p_company_id, v_folio_id, v_status_pend, 0, SYSDATE);
 
                 -- ── STEP 5: USER_COMP_ROLES (EMPLOYEE) ────────────
-                SELECT COUNT(*) INTO v_cnt
-                FROM   EPF_USER_COMP_ROLES
-                WHERE  USER_ID = v_user_id AND COMPANY_ID = p_company_id AND ROLE_ID = v_role_emp;
+                DECLARE v_uc_id NUMBER; BEGIN
+                    SELECT USER_COMPANY_ID INTO v_uc_id FROM EPF_USER_COMPANIES
+                    WHERE  USER_ID = v_user_id AND COMPANY_ID = p_company_id;
 
-                IF v_cnt = 0 THEN
-                    INSERT INTO EPF_USER_COMP_ROLES (USER_ID, COMPANY_ID, ROLE_ID, CREATED_BY, CREATED_DATE)
-                    VALUES (v_user_id, p_company_id, v_role_emp, 0, SYSDATE);
-                END IF;
+                    SELECT COUNT(*) INTO v_cnt FROM EPF_USER_COMP_ROLES
+                    WHERE  USER_COMPANY_ID = v_uc_id AND ROLE_ID = v_role_emp;
+
+                    IF v_cnt = 0 THEN
+                        INSERT INTO EPF_USER_COMP_ROLES (USER_COMPANY_ID, ROLE_ID, IS_ACTIVE, CREATED_BY, CREATED_DATE)
+                        VALUES (v_uc_id, v_role_emp, 'Y', 0, SYSDATE);
+                    ELSE
+                        UPDATE EPF_USER_COMP_ROLES SET IS_ACTIVE = 'Y'
+                        WHERE  USER_COMPANY_ID = v_uc_id AND ROLE_ID = v_role_emp;
+                    END IF;
+                END;
             END IF;
 
             -- Mark processed
@@ -234,10 +246,12 @@ BEGIN
 
         EXCEPTION WHEN OTHERS THEN
             ROLLBACK TO sp_emp;
-            UPDATE EPF_EMP_API_STAGING SET
-                PROCESS_STATUS  = 'ERROR',
-                PROCESS_MESSAGE = SUBSTR(SQLERRM,1,3000)
-            WHERE STAGING_ID = stg.STAGING_ID;
+            DECLARE v_err VARCHAR2(3000) := SUBSTR(SQLERRM,1,3000); BEGIN
+                UPDATE EPF_EMP_API_STAGING SET
+                    PROCESS_STATUS  = 'ERROR',
+                    PROCESS_MESSAGE = v_err
+                WHERE STAGING_ID = stg.STAGING_ID;
+            END;
         END;
     END LOOP;
 
@@ -276,10 +290,12 @@ BEGIN
         BEGIN
             SYNC_COMPANY_EMPLOYEES(c.COMPANY_ID);
         EXCEPTION WHEN OTHERS THEN
-            INSERT INTO EPF_ACTIVITY_LOG
-                (ENTITY_TYPE, ENTITY_ID, ACTION_CODE, REMARKS, PERFORMED_BY, PERFORMED_DATE)
-            VALUES ('SYNC', c.COMPANY_ID, 'SYNC_ERROR', SQLERRM, 0, SYSDATE);
-            COMMIT;
+            DECLARE v_err VARCHAR2(4000) := SQLERRM; BEGIN
+                INSERT INTO EPF_ACTIVITY_LOG
+                    (ENTITY_TYPE, ENTITY_ID, ACTION_CODE, REMARKS, PERFORMED_BY, PERFORMED_DATE)
+                VALUES ('SYNC', c.COMPANY_ID, 'SYNC_ERROR', v_err, 0, SYSDATE);
+                COMMIT;
+            END;
         END;
     END LOOP;
 END RUN_DAILY_SYNC;

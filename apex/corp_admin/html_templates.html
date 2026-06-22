@@ -1,0 +1,508 @@
+<!-- ============================================================
+     FILE: /home/user/EPF/apex/corp_admin/html_templates.html
+     EPF PORTAL – Corporate Admin Module – HTML/CSS/JS Templates
+     Each section corresponds to a Static Content Region or
+     Inline CSS/JS to be added in APEX Application Builder.
+     ============================================================ -->
+
+<!-- ============================================================
+     SECTION 1: PAGE 30 – User Management
+     Region type: Static Content (Header/Footer of IR region)
+     + Inline CSS in Page HTML Head
+     ============================================================ -->
+
+<!-- ── Page 30: Inline CSS (paste into Page > CSS > Inline) ── -->
+<style>
+/* ── Status Badges ── */
+.epf-badge-active   { background:#d4edda; color:#155724; border-radius:12px; padding:3px 10px; font-size:12px; font-weight:600; }
+.epf-badge-inactive { background:#fff3cd; color:#856404; border-radius:12px; padding:3px 10px; font-size:12px; font-weight:600; }
+.epf-badge-blocked  { background:#f8d7da; color:#721c24; border-radius:12px; padding:3px 10px; font-size:12px; font-weight:600; }
+.epf-badge-deleted  { background:#e2e3e5; color:#495057; border-radius:12px; padding:3px 10px; font-size:12px; font-weight:600; }
+
+/* ── Action toolbar ── */
+.epf-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.epf-btn-primary { background:#003087; color:#fff; border:none; border-radius:6px; padding:7px 18px; font-size:13px; cursor:pointer; }
+.epf-btn-danger  { background:#c0392b; color:#fff; border:none; border-radius:6px; padding:7px 18px; font-size:13px; cursor:pointer; }
+.epf-btn-primary:hover { background:#00205f; }
+.epf-btn-danger:hover  { background:#922b21; }
+
+/* ── IR table enhancements ── */
+.a-IRR-table td, .a-IRR-table th { vertical-align:middle !important; }
+.a-IRR-table input[type=checkbox]:disabled { opacity:0.35; cursor:not-allowed; }
+
+/* ── Edit / History icon links ── */
+.epf-icon-btn { border:none; background:transparent; cursor:pointer; color:#003087; font-size:16px; padding:2px 6px; }
+.epf-icon-btn:hover { color:#c0392b; }
+
+/* ── Popup / Modal overlay ── */
+.epf-modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+    background:rgba(0,0,0,.45); z-index:9998; }
+.epf-modal { background:#fff; border-radius:8px; width:480px; max-width:95%; padding:28px 32px;
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:9999;
+    box-shadow:0 8px 32px rgba(0,0,0,.25); }
+.epf-modal-header { font-size:18px; font-weight:700; color:#003087; margin-bottom:20px;
+    border-bottom:2px solid #003087; padding-bottom:10px; }
+.epf-modal-footer { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
+.epf-field-group { margin-bottom:14px; }
+.epf-field-group label { display:block; font-weight:600; font-size:13px; margin-bottom:4px; color:#333; }
+.epf-field-group input,
+.epf-field-group select { width:100%; padding:8px 10px; border:1px solid #ccc; border-radius:5px;
+    font-size:13px; box-sizing:border-box; }
+.epf-field-group input:disabled,
+.epf-field-group select:disabled { background:#f5f5f5; color:#777; }
+.epf-field-readonly-note { font-size:11px; color:#888; margin-top:4px; }
+
+/* ── Tab strip (Users / Activity Log) ── */
+.epf-tabs { display:flex; border-bottom:2px solid #003087; margin-bottom:16px; }
+.epf-tab { padding:8px 22px; cursor:pointer; font-size:14px; font-weight:600;
+    color:#555; border-radius:4px 4px 0 0; }
+.epf-tab.active { background:#003087; color:#fff; }
+</style>
+
+<!-- ── Page 30: Toolbar (paste as Static Content region above IR) ── -->
+<div class="epf-toolbar">
+    <button class="epf-btn-primary" onclick="epfOpenAddUser()">+ Add User</button>
+    <button class="epf-btn-danger"  onclick="epfConfirmDelete()">Delete Selected</button>
+    <span id="epf-selected-count" style="font-size:13px;color:#666;"></span>
+</div>
+
+<!-- ── Page 30: Add User Modal ── -->
+<div class="epf-modal-overlay" id="epfAddUserOverlay"></div>
+<div class="epf-modal" id="epfAddUserModal" style="display:none;">
+    <div class="epf-modal-header">Add New User</div>
+    <div class="epf-field-group">
+        <label>Role *</label>
+        <select id="epfNewRole">
+            <option value="">-- Select --</option>
+            <option value="CORP_MAKER">Maker</option>
+            <option value="CORP_CHECKER">Checker</option>
+        </select>
+    </div>
+    <div class="epf-field-group">
+        <label>Full Name *</label>
+        <input type="text" id="epfNewFullName" placeholder="Alphabets and spaces only" maxlength="200" />
+    </div>
+    <div class="epf-field-group">
+        <label>Email *</label>
+        <input type="email" id="epfNewEmail" placeholder="user@example.com" maxlength="200" />
+    </div>
+    <div class="epf-field-group">
+        <label>Mobile No *</label>
+        <input type="text" id="epfNewMobile" placeholder="03xxxxxxxxx" maxlength="20" />
+    </div>
+    <div class="epf-field-group">
+        <label>Employee Code</label>
+        <input type="text" id="epfNewEmpCode" placeholder="Optional" maxlength="50" />
+    </div>
+    <div class="epf-modal-footer">
+        <button class="epf-btn-primary" onclick="epfSubmitAddUser()">Create User</button>
+        <button onclick="epfCloseAddUser()" style="padding:7px 18px;border-radius:6px;border:1px solid #ccc;cursor:pointer;">Cancel</button>
+    </div>
+</div>
+
+<!-- ── Page 30: Edit User Modal ── -->
+<div class="epf-modal-overlay" id="epfEditUserOverlay"></div>
+<div class="epf-modal" id="epfEditUserModal" style="display:none;">
+    <div class="epf-modal-header" id="epfEditModalTitle">Edit User</div>
+    <div class="epf-field-group">
+        <label>Role</label>
+        <select id="epfEditRole"></select>
+    </div>
+    <div class="epf-field-group">
+        <label>Full Name</label>
+        <input type="text" id="epfEditFullName" maxlength="200" />
+    </div>
+    <div class="epf-field-group">
+        <label>Email</label>
+        <input type="email" id="epfEditEmail" disabled />
+        <div class="epf-field-readonly-note">Email cannot be changed after account creation.</div>
+    </div>
+    <div class="epf-field-group">
+        <label>Mobile No</label>
+        <input type="text" id="epfEditMobile" maxlength="20" />
+    </div>
+    <div class="epf-field-group">
+        <label>Employee Code</label>
+        <input type="text" id="epfEditEmpCode" maxlength="50" />
+    </div>
+    <div class="epf-field-group">
+        <label>Status</label>
+        <select id="epfEditStatus">
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+        </select>
+    </div>
+    <div class="epf-modal-footer" id="epfEditFooter">
+        <button class="epf-btn-primary" onclick="epfSubmitEditUser()">Save Changes</button>
+        <button onclick="epfCloseEditUser()" style="padding:7px 18px;border-radius:6px;border:1px solid #ccc;cursor:pointer;">Cancel</button>
+    </div>
+</div>
+
+<!-- ── Page 30: User History Modal ── -->
+<div class="epf-modal-overlay" id="epfHistoryOverlay"></div>
+<div class="epf-modal" id="epfHistoryModal" style="display:none;width:640px;">
+    <div class="epf-modal-header">User Activity History</div>
+    <div id="epfHistoryContent" style="max-height:350px;overflow-y:auto;font-size:13px;"></div>
+    <div class="epf-modal-footer">
+        <button onclick="epfCloseHistory()" style="padding:7px 18px;border-radius:6px;border:1px solid #ccc;cursor:pointer;">Close</button>
+    </div>
+</div>
+
+<!-- ── Page 30: JavaScript (paste into Page > JavaScript > Execute when Page Loads) ── -->
+<script>
+var epfSelectedUCIDs = [];
+
+// Track checkbox selections
+$(document).on('change', '.epf-row-checkbox', function(){
+    var ucid = $(this).data('ucid');
+    if(this.checked){ if(epfSelectedUCIDs.indexOf(ucid)<0) epfSelectedUCIDs.push(ucid); }
+    else { epfSelectedUCIDs = epfSelectedUCIDs.filter(function(v){ return v!==ucid; }); }
+    $('#epf-selected-count').text(epfSelectedUCIDs.length ? epfSelectedUCIDs.length+' selected' : '');
+});
+
+// ── Add User ──
+function epfOpenAddUser(){
+    $('#epfAddUserOverlay,#epfAddUserModal').show();
+}
+function epfCloseAddUser(){
+    $('#epfAddUserOverlay,#epfAddUserModal').hide();
+    $('#epfNewRole,#epfNewFullName,#epfNewEmail,#epfNewMobile,#epfNewEmpCode').val('');
+}
+function epfSubmitAddUser(){
+    if(!$('#epfNewRole').val()){ alert('Please select a role.'); return; }
+    if(!$('#epfNewFullName').val().trim()){ alert('Full Name is required.'); return; }
+    if(!$('#epfNewEmail').val().trim()){ alert('Email is required.'); return; }
+    if(!$('#epfNewMobile').val().trim()){ alert('Mobile No is required.'); return; }
+    apex.item('P30_ROLE_CODE').setValue($('#epfNewRole').val());
+    apex.item('P30_FULL_NAME').setValue($('#epfNewFullName').val().trim());
+    apex.item('P30_EMAIL').setValue($('#epfNewEmail').val().trim());
+    apex.item('P30_MOBILE_NO').setValue($('#epfNewMobile').val().trim());
+    apex.item('P30_EMPLOYEE_CODE').setValue($('#epfNewEmpCode').val().trim());
+    apex.submit('CREATE_USER');
+}
+
+// ── Edit User ──
+function epfOpenEditUser(ucid){
+    apex.item('P30_EDIT_USER_COMPANY_ID').setValue(ucid);
+    apex.server.process('GET_USER_JSON', { pageItems:'#P30_EDIT_USER_COMPANY_ID' }, {
+        success: function(data){
+            var d = JSON.parse(data);
+            var readOnly = d.isReadOnly === 'Y';
+            $('#epfEditFullName').val(d.fullName).prop('disabled', readOnly);
+            $('#epfEditEmail').val(d.email);
+            $('#epfEditMobile').val(d.mobileNo).prop('disabled', readOnly);
+            $('#epfEditEmpCode').val(d.employeeCode).prop('disabled', readOnly);
+            // Role select
+            var $rs = $('#epfEditRole').empty();
+            if(readOnly){ $rs.append('<option>'+d.roleCode+'</option>').prop('disabled',true); }
+            else {
+                $rs.append('<option value="CORP_MAKER">Maker</option>');
+                $rs.append('<option value="CORP_CHECKER">Checker</option>');
+                $rs.val(d.roleCode);
+            }
+            // Status select
+            var $ss = $('#epfEditStatus').prop('disabled', readOnly).val(d.statusCode);
+            // Footer buttons
+            if(readOnly){
+                $('#epfEditFooter .epf-btn-primary').hide();
+            } else {
+                $('#epfEditFooter .epf-btn-primary').show();
+            }
+            $('#epfEditModalTitle').text(readOnly ? 'View User' : 'Edit User');
+            $('#epfEditUserOverlay,#epfEditUserModal').show();
+        }
+    });
+}
+function epfCloseEditUser(){
+    $('#epfEditUserOverlay,#epfEditUserModal').hide();
+}
+function epfSubmitEditUser(){
+    apex.item('P30_EDIT_ROLE_CODE').setValue($('#epfEditRole').val());
+    apex.item('P30_EDIT_FULL_NAME').setValue($('#epfEditFullName').val().trim());
+    apex.item('P30_EDIT_MOBILE_NO').setValue($('#epfEditMobile').val().trim());
+    apex.item('P30_EDIT_EMPLOYEE_CODE').setValue($('#epfEditEmpCode').val().trim());
+    apex.item('P30_EDIT_STATUS_CODE').setValue($('#epfEditStatus').val());
+    apex.submit('UPDATE_USER');
+}
+
+// ── History Modal ──
+function epfOpenHistory(ucid){
+    apex.item('P30_HISTORY_USER_COMPANY_ID').setValue(ucid);
+    apex.server.process('GET_USER_HISTORY', { pageItems:'#P30_HISTORY_USER_COMPANY_ID' }, {
+        success: function(data){
+            var rows = JSON.parse(data);
+            var html = '<table style="width:100%;border-collapse:collapse;">';
+            html += '<tr style="background:#003087;color:#fff;"><th style="padding:7px;text-align:left;">Date</th><th style="padding:7px;text-align:left;">Detail</th></tr>';
+            rows.forEach(function(r, i){
+                html += '<tr style="background:'+(i%2?'#f9f9f9':'#fff')+';">';
+                html += '<td style="padding:6px;white-space:nowrap;">'+r.ACTION_DATE_DISP+'</td>';
+                html += '<td style="padding:6px;">'+r.ACTION_DETAIL+'</td>';
+                html += '</tr>';
+            });
+            html += '</table>';
+            if(!rows.length) html = '<p style="color:#888;text-align:center;padding:20px;">No history available.</p>';
+            $('#epfHistoryContent').html(html);
+            $('#epfHistoryOverlay,#epfHistoryModal').show();
+        }
+    });
+}
+function epfCloseHistory(){
+    $('#epfHistoryOverlay,#epfHistoryModal').hide();
+}
+
+// ── Delete Selected ──
+function epfConfirmDelete(){
+    if(!epfSelectedUCIDs.length){ alert('Please select at least one user to delete.'); return; }
+    if(!confirm('Delete '+epfSelectedUCIDs.length+' selected user(s)? This action cannot be undone.')){ return; }
+    apex.item('P30_SELECTED_USER_IDS').setValue(epfSelectedUCIDs.join(':'));
+    apex.submit('DELETE_USERS');
+}
+</script>
+
+
+<!-- ============================================================
+     SECTION 2: PAGE 9901 – Forgot Password
+     Standalone public page (no auth required)
+     Region: Static Content + Form items
+     ============================================================ -->
+<style>
+.epf-auth-wrap { max-width:440px; margin:60px auto; padding:36px 40px; background:#fff;
+    border-radius:10px; box-shadow:0 4px 24px rgba(0,0,0,.12); }
+.epf-auth-logo { text-align:center; margin-bottom:24px; }
+.epf-auth-logo img { height:52px; }
+.epf-auth-title { font-size:22px; font-weight:700; color:#003087; margin-bottom:6px; text-align:center; }
+.epf-auth-subtitle { font-size:13px; color:#666; text-align:center; margin-bottom:24px; }
+.epf-auth-field { margin-bottom:16px; }
+.epf-auth-field label { display:block; font-weight:600; font-size:13px; margin-bottom:5px; color:#333; }
+.epf-auth-field input { width:100%; padding:10px 12px; border:1px solid #ccc; border-radius:6px;
+    font-size:14px; box-sizing:border-box; }
+.epf-auth-btn { width:100%; padding:11px; background:#003087; color:#fff; border:none; border-radius:6px;
+    font-size:15px; font-weight:600; cursor:pointer; margin-top:6px; }
+.epf-auth-btn:hover { background:#00205f; }
+.epf-auth-msg { text-align:center; font-size:13px; margin-top:14px; }
+.epf-auth-success { background:#d4edda; color:#155724; border-radius:6px; padding:12px; font-size:13px; text-align:center; }
+</style>
+
+<!-- Page 9901 Static Content Region Body -->
+<div class="epf-auth-wrap">
+    <div class="epf-auth-logo">
+        <img src="#APP_IMAGES#epf-logo.png" alt="EPF Portal" />
+    </div>
+    <div class="epf-auth-title">Forgot Password</div>
+    <div class="epf-auth-subtitle">Enter your registered email address and we'll send you a password reset link.</div>
+
+    <!-- APEX items P9901_EMAIL and P9901_SUCCESS_MSG are placed here by APEX -->
+    <!-- After page submit, show success message regardless of whether email exists -->
+
+    <div id="epf-fp-success" class="epf-auth-success" style="display:none;">
+        If this email is registered, you will receive a password reset link shortly.
+        Please check your inbox (and spam folder).
+    </div>
+
+    <div id="epf-fp-form">
+        <div class="epf-auth-field">
+            <label for="P9901_EMAIL">Email Address</label>
+            <!-- APEX item P9901_EMAIL rendered here -->
+        </div>
+        <button type="button" class="epf-auth-btn" onclick="apex.submit('FORGOT_PASSWORD')">
+            Send Reset Link
+        </button>
+        <div class="epf-auth-msg">
+            <a href="f?p=&APP_ID.:1:&SESSION." style="color:#003087;">Back to Login</a>
+        </div>
+    </div>
+</div>
+
+<script>
+// If success message item has value, show success panel and hide form
+$(function(){
+    var msg = apex.item('P9901_SUCCESS_MSG').getValue();
+    if(msg && msg.length){
+        $('#epf-fp-form').hide();
+        $('#epf-fp-success').show();
+    }
+});
+</script>
+
+
+<!-- ============================================================
+     SECTION 3: PAGE 9902 – Set / Reset Password
+     Accessed via tokenised link: f?p=EPF:9902:::::P9902_TOKEN:xxx
+     ============================================================ -->
+<style>
+/* Reuses .epf-auth-wrap, .epf-auth-* styles from Section 2 */
+.epf-otp-boxes { display:flex; gap:8px; justify-content:center; margin:8px 0 16px; }
+.epf-otp-boxes input { width:44px; height:52px; text-align:center; font-size:22px; font-weight:700;
+    border:2px solid #ccc; border-radius:6px; }
+.epf-otp-boxes input:focus { border-color:#003087; outline:none; }
+.epf-pwd-rule { font-size:11px; color:#888; margin-top:4px; }
+.epf-resend-link { color:#003087; font-size:12px; cursor:pointer; text-decoration:underline; }
+.epf-timer { font-size:12px; color:#888; }
+</style>
+
+<!-- Page 9902 Static Content -->
+<div class="epf-auth-wrap">
+    <div class="epf-auth-logo">
+        <img src="#APP_IMAGES#epf-logo.png" alt="EPF Portal" />
+    </div>
+    <div class="epf-auth-title" id="epf-set-title">Set Your Password</div>
+    <div class="epf-auth-subtitle" id="epf-set-sub">Choose a strong password for your account.</div>
+
+    <!-- Step 1: New Password entry -->
+    <div id="epf-step-pwd">
+        <div class="epf-auth-field">
+            <label>New Password</label>
+            <!-- APEX item P9902_NEW_PASSWORD (password type) -->
+            <div class="epf-pwd-rule">Min 8 chars · 1 uppercase · 1 lowercase · 1 digit · 1 special character</div>
+        </div>
+        <div class="epf-auth-field">
+            <label>Confirm Password</label>
+            <!-- APEX item P9902_CONFIRM_PASSWORD (password type) -->
+        </div>
+        <button type="button" class="epf-auth-btn" onclick="apex.submit('SET_PASSWORD_REQUEST')">
+            Continue
+        </button>
+    </div>
+
+    <!-- Step 2: OTP verification (shown after Step 1 success) -->
+    <div id="epf-step-otp" style="display:none;">
+        <div class="epf-auth-subtitle">A 6-digit verification code has been sent to your registered email. Enter it below.</div>
+        <div class="epf-otp-boxes">
+            <input type="text" maxlength="1" class="epf-otp-digit" />
+            <input type="text" maxlength="1" class="epf-otp-digit" />
+            <input type="text" maxlength="1" class="epf-otp-digit" />
+            <input type="text" maxlength="1" class="epf-otp-digit" />
+            <input type="text" maxlength="1" class="epf-otp-digit" />
+            <input type="text" maxlength="1" class="epf-otp-digit" />
+        </div>
+        <button type="button" class="epf-auth-btn" onclick="epfSubmitOTP('CONFIRM_SET_PASSWORD')">
+            Verify &amp; Set Password
+        </button>
+        <div style="text-align:center;margin-top:12px;">
+            <span class="epf-timer" id="epfOtpTimer">Resend in <span id="epfOtpSecs">300</span>s</span>
+            <span class="epf-resend-link" id="epfResendLink" style="display:none;" onclick="epfResendOTP()">Resend OTP</span>
+        </div>
+    </div>
+</div>
+
+<script>
+var epfOtpInterval;
+
+$(function(){
+    // Auto-advance OTP digit boxes
+    $('.epf-otp-digit').on('input', function(){
+        if($(this).val().length===1) $(this).next('.epf-otp-digit').focus();
+    }).on('keydown', function(e){
+        if(e.key==='Backspace' && !$(this).val()) $(this).prev('.epf-otp-digit').focus();
+    });
+
+    // If P9902_OTP_SENT='Y', switch to OTP step
+    if(apex.item('P9902_OTP_SENT').getValue()==='Y'){
+        $('#epf-step-pwd').hide();
+        $('#epf-step-otp').show();
+        epfStartOtpTimer(300);
+    }
+});
+
+function epfStartOtpTimer(secs){
+    clearInterval(epfOtpInterval);
+    epfOtpInterval = setInterval(function(){
+        secs--;
+        $('#epfOtpSecs').text(secs);
+        if(secs<=0){
+            clearInterval(epfOtpInterval);
+            $('#epfOtpTimer').hide();
+            $('#epfResendLink').show();
+        }
+    }, 1000);
+}
+
+function epfSubmitOTP(request){
+    var otp = $('.epf-otp-digit').map(function(){ return $(this).val(); }).get().join('');
+    apex.item('P9902_OTP_CODE').setValue(otp);
+    apex.submit(request);
+}
+
+function epfResendOTP(){
+    apex.submit('RESEND_OTP');
+}
+</script>
+
+
+<!-- ============================================================
+     SECTION 4: PAGE 9903 – Change Password
+     Authenticated page; accessed from User Profile dropdown
+     ============================================================ -->
+<div class="epf-auth-wrap">
+    <div class="epf-auth-logo">
+        <img src="#APP_IMAGES#epf-logo.png" alt="EPF Portal" />
+    </div>
+    <div class="epf-auth-title">Change Password</div>
+
+    <!-- Step 1: Current + New passwords -->
+    <div id="epf-chg-step-pwd">
+        <div class="epf-auth-field">
+            <label>Current Password</label>
+            <!-- APEX item P9903_CURRENT_PASSWORD (password type) -->
+        </div>
+        <div class="epf-auth-field">
+            <label>New Password</label>
+            <!-- APEX item P9903_NEW_PASSWORD (password type) -->
+            <div class="epf-pwd-rule">Min 8 chars · 1 uppercase · 1 lowercase · 1 digit · 1 special character</div>
+        </div>
+        <div class="epf-auth-field">
+            <label>Confirm New Password</label>
+            <!-- APEX item P9903_CONFIRM_PASSWORD (password type) -->
+        </div>
+        <button type="button" class="epf-auth-btn" onclick="apex.submit('CHANGE_PASSWORD_REQUEST')">
+            Continue
+        </button>
+    </div>
+
+    <!-- Step 2: OTP verification -->
+    <div id="epf-chg-step-otp" style="display:none;">
+        <div class="epf-auth-subtitle">A 6-digit verification code has been sent to your registered email.</div>
+        <div class="epf-otp-boxes">
+            <input type="text" maxlength="1" class="epf-otp-digit" />
+            <input type="text" maxlength="1" class="epf-otp-digit" />
+            <input type="text" maxlength="1" class="epf-otp-digit" />
+            <input type="text" maxlength="1" class="epf-otp-digit" />
+            <input type="text" maxlength="1" class="epf-otp-digit" />
+            <input type="text" maxlength="1" class="epf-otp-digit" />
+        </div>
+        <button type="button" class="epf-auth-btn" onclick="epfSubmitOTP('CONFIRM_CHANGE_PASSWORD')">
+            Verify &amp; Change Password
+        </button>
+        <div style="text-align:center;margin-top:12px;">
+            <span class="epf-timer" id="epfChgTimer">Resend in <span id="epfChgSecs">300</span>s</span>
+            <span class="epf-resend-link" id="epfChgResend" style="display:none;" onclick="apex.submit('RESEND_OTP_CHG')">Resend OTP</span>
+        </div>
+    </div>
+
+    <div style="text-align:center;margin-top:16px;">
+        <a href="javascript:history.back()" style="color:#003087;font-size:13px;">Cancel</a>
+    </div>
+</div>
+
+<script>
+$(function(){
+    if(apex.item('P9903_OTP_SENT').getValue()==='Y'){
+        $('#epf-chg-step-pwd').hide();
+        $('#epf-chg-step-otp').show();
+        var s=300, iv=setInterval(function(){
+            s--; $('#epfChgSecs').text(s);
+            if(s<=0){ clearInterval(iv); $('#epfChgTimer').hide(); $('#epfChgResend').show(); }
+        },1000);
+    }
+    // Reuse OTP digit auto-advance from section 3 (shared JS)
+    $('.epf-otp-digit').on('input', function(){
+        if($(this).val().length===1) $(this).next('.epf-otp-digit').focus();
+    }).on('keydown', function(e){
+        if(e.key==='Backspace' && !$(this).val()) $(this).prev('.epf-otp-digit').focus();
+    });
+});
+</script>
+
+<!-- ============================================================
+     END OF html_templates.html
+     ============================================================ -->
