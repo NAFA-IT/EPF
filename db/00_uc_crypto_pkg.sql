@@ -521,7 +521,7 @@ CREATE OR REPLACE PACKAGE BODY uc_crypto AS
     pad := 128 - MOD(lb+17, 128);
     IF pad=128 THEN pad:=0; END IF;
     b := b || HEXTORAW('80') || HEXTORAW(LPAD('',pad*2,'00'))
-           || HEXTORAW('00000000')  -- high 64 bits of length (lb < 2^32 bytes)
+           || HEXTORAW('0000000000000000')  -- high 64 bits of 128-bit length (8 bytes)
            || UTL_RAW.CAST_FROM_BINARY_INTEGER(FLOOR(lb/536870912),UTL_RAW.BIG_ENDIAN)
            || UTL_RAW.CAST_FROM_BINARY_INTEGER(MOD(lb,536870912)*8,UTL_RAW.BIG_ENDIAN);
 
