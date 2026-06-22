@@ -658,7 +658,7 @@ CREATE OR REPLACE PACKAGE BODY uc_crypto AS
       -- Generate random hex chars (2 chars per byte)
       v_hex := '';
       FOR i IN 1..v_take LOOP
-        v_hex := v_hex || TO_CHAR(TRUNC(DBMS_RANDOM.VALUE(0,256)),'FM0X');
+        v_hex := v_hex || LPAD(TO_CHAR(TRUNC(DBMS_RANDOM.VALUE(0,256)),'XX'),2,'0');
       END LOOP;
       v_chunk := HEXTORAW(v_hex);
       IF v_result IS NULL THEN v_result := v_chunk;
