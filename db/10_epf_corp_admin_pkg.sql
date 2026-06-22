@@ -427,6 +427,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_ADMIN_PKG AS
         v_old_status_code VARCHAR2(50);
         v_company_id     EPF_USER_COMPANIES.COMPANY_ID%TYPE;
         -- New values
+        v_old_role_id    EPF_ROLES.ROLE_ID%TYPE;
         v_new_role_id    EPF_ROLES.ROLE_ID%TYPE;
         v_new_status_id  NUMBER;
         v_active_sid     NUMBER := EPF_STATUS_PKG.GET_ID('USER_STATUS', 'ACTIVE');
@@ -489,6 +490,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_ADMIN_PKG AS
         END;
 
         v_old_status_code := EPF_STATUS_PKG.GET_CODE(v_old_status_id);
+        v_old_role_id     := GET_ROLE_ID(v_old_role_code);
         v_new_role_id     := GET_ROLE_ID(p_role_code);
         v_admin_name      := GET_ADMIN_NAME(p_updated_by_ucid);
 
@@ -521,7 +523,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_ADMIN_PKG AS
             UPDATE EPF_USER_COMP_ROLES
                SET IS_ACTIVE = 'N'
              WHERE USER_COMPANY_ID = p_user_company_id
-               AND ROLE_ID = GET_ROLE_ID(v_old_role_code);
+               AND ROLE_ID = v_old_role_id;
 
             INSERT INTO EPF_USER_COMP_ROLES (
                 USER_COMPANY_ID, ROLE_ID, IS_ACTIVE
