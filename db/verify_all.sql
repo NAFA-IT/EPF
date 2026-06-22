@@ -29,11 +29,13 @@ SELECT OBJECT_NAME,
        'EPF_AAML_PKG',
        'EPF_EMP_SYNC_PKG',
        'EPF_CORP_ADMIN_PKG',
-       'EPF_AUTH_PKG',
        'EPF_EMAIL_PKG',
        'EPF_CORP_TXN_PKG',
        'EPF_AUTHORIZER_PKG',
-       'EPF_EMPLOYEE_PKG'
+       'EPF_EMPLOYEE_PKG',
+       'EPF_UTIL',
+       'EPF_PKG_AUTH',
+       'EPF_CORP_PKG'
    )
  ORDER BY OBJECT_NAME, OBJECT_TYPE;
 
@@ -112,11 +114,13 @@ SELECT NAME, TYPE, LINE, POSITION, TEXT
        'EPF_AAML_PKG',
        'EPF_EMP_SYNC_PKG',
        'EPF_CORP_ADMIN_PKG',
-       'EPF_AUTH_PKG',
        'EPF_EMAIL_PKG',
        'EPF_CORP_TXN_PKG',
        'EPF_AUTHORIZER_PKG',
-       'EPF_EMPLOYEE_PKG'
+       'EPF_EMPLOYEE_PKG',
+       'EPF_UTIL',
+       'EPF_PKG_AUTH',
+       'EPF_CORP_PKG'
  )
  ORDER BY NAME, TYPE, LINE, POSITION;
 

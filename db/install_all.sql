@@ -99,6 +99,21 @@ PROMPT
 PROMPT [16] EPF_EMPLOYEE_PKG ...
 @@16_epf_employee_pkg.sql
 
+-- ── Step 17: Utility package ─────────────────────────────────
+PROMPT
+PROMPT [17] EPF_UTIL ...
+@@17_epf_util_pkg.sql
+
+-- ── Step 18: Corporate package ───────────────────────────────
+PROMPT
+PROMPT [18] EPF_CORP_PKG ...
+@@18_epf_corp_pkg.sql
+
+-- ── Step 19: Auth package (consolidated EPF_PKG_AUTH) ────────
+PROMPT
+PROMPT [19] EPF_PKG_AUTH (consolidated) ...
+@@19_epf_pkg_auth.sql
+
 -- ── Final: Verify everything compiled OK ─────────────────────
 PROMPT
 PROMPT [VERIFY] Running post-install checks ...
