@@ -134,13 +134,14 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMPLOYEE_PKG AS
                NVL(f.LIEN_MARKED,'N'),
                NVL(f.IS_DISABLED,'N'),
                NVL(f.NOC_ISSUED,'N'),
-               e.USER_ID
+               uc.USER_ID
           INTO p_company_id, p_fund_id, p_folio_no,
                p_lien_marked, p_is_disabled, p_noc_issued,
                p_user_id
-          FROM EPF_FOLIOS    f
-          JOIN EPF_EMPLOYEES e ON e.EMPLOYEE_ID = f.EMPLOYEE_ID
-         WHERE f.FOLIO_ID = p_folio_id;
+          FROM EPF_FOLIOS         f
+          JOIN EPF_USER_COMPANIES uc ON uc.FOLIO_ID = f.FOLIO_ID
+         WHERE f.FOLIO_ID = p_folio_id
+           AND ROWNUM = 1;
     EXCEPTION
         WHEN NO_DATA_FOUND THEN
             p_company_id  := NULL;
@@ -163,10 +164,11 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMPLOYEE_PKG AS
     BEGIN
         SELECT u.FULL_NAME
           INTO v_name
-          FROM EPF_FOLIOS    f
-          JOIN EPF_EMPLOYEES e ON e.EMPLOYEE_ID = f.EMPLOYEE_ID
-          JOIN EPF_USERS     u ON u.USER_ID      = e.USER_ID
-         WHERE f.FOLIO_ID = p_folio_id;
+          FROM EPF_FOLIOS         f
+          JOIN EPF_USER_COMPANIES uc ON uc.FOLIO_ID = f.FOLIO_ID
+          JOIN EPF_USERS          u  ON u.USER_ID   = uc.USER_ID
+         WHERE f.FOLIO_ID = p_folio_id
+           AND ROWNUM = 1;
         RETURN v_name;
     EXCEPTION
         WHEN NO_DATA_FOUND THEN
@@ -299,21 +301,20 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMPLOYEE_PKG AS
         -- The actual columns (UNITS, NAV, etc.) depend on the DFN data feed
         -- tables (EPF_FOLIO_FUND_MAPPING, EPF_FUNDS, etc.).
         -- This query is a structural stub referencing those tables.
+        -- EPF_FOLIO_FUND_MAPPING is a mapping table only (FOLIO_ID, FUND_ID).
+        -- NAV/units/balance data comes from the DFN data feed; stub with 0.
         OPEN v_cur FOR
             SELECT f.FUND_NAME,
-                   NVL(ffm.SUBFUND_CODE, 'TOTAL')  AS SUBFUND_NAME,
-                   NVL(ffm.UNITS, 0)                AS UNITS,
-                   NVL(ffm.LATEST_NAV, 0)           AS NAV,
-                   NVL(ffm.UNITS * ffm.LATEST_NAV, 0) AS CURRENT_BALANCE,
-                   NVL(ffm.NET_INVESTMENT, 0)       AS NET_INVESTMENT,
-                   NVL(ffm.UNITS * ffm.LATEST_NAV, 0)
-                    - NVL(ffm.NET_INVESTMENT, 0)    AS PROFIT_LOSS
+                   'TOTAL'  AS SUBFUND_NAME,
+                   0        AS UNITS,
+                   0        AS NAV,
+                   0        AS CURRENT_BALANCE,
+                   0        AS NET_INVESTMENT,
+                   0        AS PROFIT_LOSS
               FROM EPF_FOLIO_FUND_MAPPING ffm
               JOIN EPF_FUNDS              f   ON f.FUND_ID = ffm.FUND_ID
              WHERE ffm.FOLIO_ID = p_folio_id
-               AND (p_date_from IS NULL OR ffm.EFFECTIVE_DATE >= v_from)
-               AND (p_date_to   IS NULL OR ffm.EFFECTIVE_DATE <= v_to)
-             ORDER BY f.FUND_NAME, ffm.SUBFUND_CODE;
+             ORDER BY f.FUND_NAME;
         RETURN v_cur;
     END GET_DASHBOARD_DATA;
 
@@ -541,10 +542,10 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMPLOYEE_PKG AS
 
         BEGIN
             SELECT u.CNIC INTO v_cnic
-              FROM EPF_EMPLOYEES e
-              JOIN EPF_USERS     u ON u.USER_ID = e.USER_ID
-              JOIN EPF_FOLIOS    f ON f.EMPLOYEE_ID = e.EMPLOYEE_ID
-             WHERE f.FOLIO_ID = p_folio_id;
+              FROM EPF_USER_COMPANIES uc
+              JOIN EPF_USERS          u  ON u.USER_ID = uc.USER_ID
+             WHERE uc.FOLIO_ID = p_folio_id
+               AND ROWNUM = 1;
         EXCEPTION
             WHEN NO_DATA_FOUND THEN v_cnic := 'N/A';
         END;
@@ -894,9 +895,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMPLOYEE_PKG AS
         BEGIN
             SELECT uc.USER_COMPANY_ID INTO v_maker_ucid
               FROM EPF_USER_COMPANIES  uc
-              JOIN EPF_EMPLOYEES       e  ON e.USER_ID = uc.USER_ID
-              JOIN EPF_FOLIOS          f  ON f.EMPLOYEE_ID = e.EMPLOYEE_ID
-             WHERE f.FOLIO_ID = p_folio_id
+             WHERE uc.FOLIO_ID   = p_folio_id
                AND uc.COMPANY_ID = v_company_id
                AND ROWNUM = 1;
         EXCEPTION
@@ -1063,9 +1062,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMPLOYEE_PKG AS
         BEGIN
             SELECT uc.USER_COMPANY_ID INTO v_maker_ucid
               FROM EPF_USER_COMPANIES  uc
-              JOIN EPF_EMPLOYEES       e  ON e.USER_ID = uc.USER_ID
-              JOIN EPF_FOLIOS          f  ON f.EMPLOYEE_ID = e.EMPLOYEE_ID
-             WHERE f.FOLIO_ID = p_folio_id
+             WHERE uc.FOLIO_ID   = p_folio_id
                AND uc.COMPANY_ID = v_company_id
                AND ROWNUM = 1;
         EXCEPTION
