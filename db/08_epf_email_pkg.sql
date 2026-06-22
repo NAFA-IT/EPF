@@ -105,8 +105,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
     --  PRIVATE: Standard HTML wrapper for email body
     -- ─────────────────────────────────────────────────────────
     FUNCTION BUILD_EMAIL_HTML (
-        p_content IN CLOB
-    ) RETURN CLOB IS
+        p_content IN VARCHAR2
+    ) RETURN VARCHAR2 IS
     BEGIN
         RETURN
             '<html><body style="margin:0;padding:0;background:#f0f2f5;font-family:Arial,sans-serif;color:#333">'
@@ -185,8 +185,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_email    EPF_USERS.EMAIL%TYPE;
         v_name     EPF_USERS.FULL_NAME%TYPE;
         v_subject  VARCHAR2(500);
-        v_body     CLOB;
-        v_content  CLOB;
+        v_body     VARCHAR2(32767);
+        v_content  VARCHAR2(32767);
         v_url      VARCHAR2(1000);
         v_err      VARCHAR2(4000);
         v_mail_id  NUMBER;
@@ -243,8 +243,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_email    EPF_USERS.EMAIL%TYPE;
         v_name     EPF_USERS.FULL_NAME%TYPE;
         v_subject  VARCHAR2(500);
-        v_body     CLOB;
-        v_content  CLOB;
+        v_body     VARCHAR2(32767);
+        v_content  VARCHAR2(32767);
         v_url      VARCHAR2(1000);
         v_err      VARCHAR2(4000);
         v_mail_id  NUMBER;
@@ -300,8 +300,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_email    EPF_USERS.EMAIL%TYPE;
         v_name     EPF_USERS.FULL_NAME%TYPE;
         v_subject  VARCHAR2(500);
-        v_body     CLOB;
-        v_content  CLOB;
+        v_body     VARCHAR2(32767);
+        v_content  VARCHAR2(32767);
         v_err      VARCHAR2(4000);
         v_mail_id  NUMBER;
         v_purpose_label VARCHAR2(100);
@@ -367,8 +367,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_email    EPF_USERS.EMAIL%TYPE;
         v_name     EPF_USERS.FULL_NAME%TYPE;
         v_subject  VARCHAR2(500);
-        v_body     CLOB;
-        v_content  CLOB;
+        v_body     VARCHAR2(32767);
+        v_content  VARCHAR2(32767);
         v_err      VARCHAR2(4000);
         v_mail_id  NUMBER;
     BEGIN
@@ -424,8 +424,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_email    EPF_USERS.EMAIL%TYPE;
         v_name     EPF_USERS.FULL_NAME%TYPE;
         v_subject  VARCHAR2(500);
-        v_body     CLOB;
-        v_content  CLOB;
+        v_body     VARCHAR2(32767);
+        v_content  VARCHAR2(32767);
         v_err      VARCHAR2(4000);
         v_mail_id  NUMBER;
     BEGIN
@@ -479,8 +479,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_email    EPF_USERS.EMAIL%TYPE;
         v_name     EPF_USERS.FULL_NAME%TYPE;
         v_subject  VARCHAR2(500);
-        v_body     CLOB;
-        v_content  CLOB;
+        v_body     VARCHAR2(32767);
+        v_content  VARCHAR2(32767);
         v_err      VARCHAR2(4000);
         v_mail_id  NUMBER;
     BEGIN
