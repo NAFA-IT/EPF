@@ -45,6 +45,7 @@ CREATE OR REPLACE PACKAGE BODY uc_crypto AS
   -- -----------------------------------------------------------------------
   TYPE tp_tab_raw  IS TABLE OF RAW(32767) INDEX BY PLS_INTEGER;
   TYPE tp_tab_num  IS TABLE OF NUMBER     INDEX BY PLS_INTEGER;
+  TYPE tp_sbox     IS TABLE OF PLS_INTEGER INDEX BY PLS_INTEGER;
 
   g_seed  RAW(2048);
 
@@ -664,8 +665,6 @@ CREATE OR REPLACE PACKAGE BODY uc_crypto AS
   -- -----------------------------------------------------------------------
 
   -- AES S-box
-  TYPE tp_sbox IS TABLE OF PLS_INTEGER INDEX BY PLS_INTEGER;
-
   FUNCTION get_sbox RETURN tp_sbox IS
     s tp_sbox;
   BEGIN
