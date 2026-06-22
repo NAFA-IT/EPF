@@ -168,7 +168,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_AUTHORIZER_PKG AS
     ) RETURN VARCHAR2 IS
         v_label VARCHAR2(50) := 'authorizer';
     BEGIN
-        SELECT LOWER(r.ROLE_DISPLAY_NAME)
+        SELECT LOWER(r.ROLE_NAME)
           INTO v_label
           FROM EPF_USER_COMP_ROLES ucr
           JOIN EPF_ROLES           r  ON r.ROLE_ID = ucr.ROLE_ID
@@ -285,19 +285,18 @@ CREATE OR REPLACE PACKAGE BODY EPF_AUTHORIZER_PKG AS
     ) IS
         PRAGMA AUTONOMOUS_TRANSACTION;
         v_user_id NUMBER;
-        v_ref_no  VARCHAR2(30);
     BEGIN
         SELECT USER_ID INTO v_user_id
           FROM EPF_USER_COMPANIES
          WHERE USER_COMPANY_ID = p_user_ucid;
 
-        INSERT INTO EPF_ACTIVITY_LOGS (
-            COMPANY_ID, USER_ID, USER_COMPANY_ID,
-            ACTION_CODE, ACTION_DETAIL, ACTION_DATE
+        INSERT INTO EPF_ACTIVITY_LOG (
+            ENTITY_TYPE, ENTITY_ID, ACTION_CODE, REMARKS, PERFORMED_BY, PERFORMED_DATE
         ) VALUES (
-            p_company_id, v_user_id, p_user_ucid,
+            p_ref_type, p_ref_id,
             p_action_code,
             p_narration || ' [Ref ' || p_ref_type || '-' || p_ref_id || ']',
+            v_user_id,
             SYSDATE
         );
         COMMIT;
@@ -848,27 +847,15 @@ CREATE OR REPLACE PACKAGE BODY EPF_AUTHORIZER_PKG AS
              WHERE COMPANY_ID = p_company_id;
         END IF;
 
-        -- Log narration to activity log (use a synthetic REF_ID = company_id)
-        DECLARE
-            PRAGMA AUTONOMOUS_TRANSACTION;
-            v_user_id NUMBER;
-        BEGIN
-            SELECT USER_ID INTO v_user_id
-              FROM EPF_USER_COMPANIES
-             WHERE USER_COMPANY_ID = p_authorizer_ucid;
-            INSERT INTO EPF_ACTIVITY_LOGS (
-                COMPANY_ID, USER_ID, USER_COMPANY_ID,
-                ACTION_CODE, ACTION_DETAIL, ACTION_DATE
-            ) VALUES (
-                p_company_id, v_user_id, p_authorizer_ucid,
-                'LOAN_SETTINGS_' || p_decision,
-                v_narration || ' [Ref LOAN_SETTINGS-' || p_company_id || ']',
-                SYSDATE
-            );
-            COMMIT;
-        EXCEPTION
-            WHEN OTHERS THEN ROLLBACK;
-        END;
+        -- Log narration to activity log
+        NARRATE(
+            p_company_id  => p_company_id,
+            p_user_ucid   => p_authorizer_ucid,
+            p_action_code => 'LOAN_SETTINGS_' || p_decision,
+            p_narration   => v_narration,
+            p_ref_type    => 'LOAN_SETTINGS',
+            p_ref_id      => p_company_id
+        );
 
         p_out_success := 'Y';
         p_out_message := 'Loan settings ' || v_decision_text || ' successfully.';
@@ -895,16 +882,16 @@ CREATE OR REPLACE PACKAGE BODY EPF_AUTHORIZER_PKG AS
         v_tag := '[Ref ' || p_ref_type || '-' || p_ref_id || ']';
         OPEN v_cur FOR
             SELECT al.LOG_ID,
-                   al.ACTION_DATE,
+                   al.PERFORMED_DATE AS ACTION_DATE,
                    al.ACTION_CODE,
                    -- Strip the [Ref TYPE-ID] tag from the display narration
-                   TRIM(REPLACE(al.ACTION_DETAIL, v_tag, '')) AS NARRATION,
+                   TRIM(REPLACE(al.REMARKS, v_tag, '')) AS NARRATION,
                    u.FULL_NAME,
-                   al.USER_COMPANY_ID
-              FROM EPF_ACTIVITY_LOGS al
-              LEFT JOIN EPF_USERS    u  ON u.USER_ID = al.USER_ID
-             WHERE al.ACTION_DETAIL LIKE '%' || v_tag || '%'
-             ORDER BY al.ACTION_DATE ASC, al.LOG_ID ASC;
+                   NULL AS USER_COMPANY_ID
+              FROM EPF_ACTIVITY_LOG al
+              LEFT JOIN EPF_USERS   u  ON u.USER_ID = al.PERFORMED_BY
+             WHERE al.REMARKS LIKE '%' || v_tag || '%'
+             ORDER BY al.PERFORMED_DATE ASC, al.LOG_ID ASC;
         RETURN v_cur;
     END GET_REQUEST_HISTORY;
 
