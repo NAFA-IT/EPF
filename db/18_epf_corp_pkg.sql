@@ -135,15 +135,16 @@ CREATE OR REPLACE PACKAGE EPF_CORP_PKG AS
 
     -- ── Company Settings ───────────────────────────────────────
     PROCEDURE SAVE_LOAN_SETTINGS (
-        p_company_id           IN  NUMBER,
-        p_loan_enabled         IN  VARCHAR2,
-        p_interest_type_id     IN  NUMBER,
-        p_interest_rate        IN  NUMBER,
-        p_max_loan_pct         IN  NUMBER,
-        p_max_instalment_months IN NUMBER,
-        p_floating_rate_tenure IN  NUMBER DEFAULT NULL,
-        p_out_success          OUT VARCHAR2,
-        p_out_message          OUT VARCHAR2
+        p_company_id            IN  NUMBER,
+        p_loan_enabled          IN  VARCHAR2,
+        p_interest_type_id      IN  NUMBER,
+        p_interest_rate         IN  NUMBER,
+        p_max_loan_pct          IN  NUMBER,
+        p_max_instalment_months IN  NUMBER,
+        p_floating_rate_tenure  IN  NUMBER DEFAULT NULL,
+        p_loan_avail_all_emp    IN  VARCHAR2 DEFAULT 'Y',
+        p_out_success           OUT VARCHAR2,
+        p_out_message           OUT VARCHAR2
     );
 
     PROCEDURE SAVE_WITHDRAWAL_SETTINGS (
@@ -867,7 +868,9 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_PKG AS
          WHERE LIEN_ID = p_lien_id;
 
         UPDATE EPF_FOLIOS
-           SET LIEN_MARKED = CASE v_request_type WHEN 'MARK' THEN 'Y' ELSE 'N' END
+           SET LIEN_MARKED  = CASE v_request_type WHEN 'MARK' THEN 'Y' ELSE 'N' END,
+               LIEN_REASON  = CASE v_request_type WHEN 'MARK' THEN v_reason ELSE NULL END,
+               LIEN_DATE    = CASE v_request_type WHEN 'MARK' THEN SYSDATE  ELSE NULL END
          WHERE FOLIO_ID = v_folio_id;
 
         COMMIT;
@@ -964,6 +967,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_PKG AS
         p_max_loan_pct          IN  NUMBER,
         p_max_instalment_months IN  NUMBER,
         p_floating_rate_tenure  IN  NUMBER DEFAULT NULL,
+        p_loan_avail_all_emp    IN  VARCHAR2 DEFAULT 'Y',
         p_out_success           OUT VARCHAR2,
         p_out_message           OUT VARCHAR2
     ) IS
@@ -983,12 +987,13 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_PKG AS
         USING (SELECT p_company_id AS CID FROM DUAL) d
         ON (cs.COMPANY_ID = d.CID)
         WHEN MATCHED THEN UPDATE SET
-            LOAN_ENABLED             = p_loan_enabled,
-            LOAN_INTEREST_TYPE       = v_int_type,
-            LOAN_INTEREST_RATE       = p_interest_rate,
-            LOAN_LIMIT_PCT           = p_max_loan_pct,
+            LOAN_ENABLED               = p_loan_enabled,
+            LOAN_INTEREST_TYPE         = v_int_type,
+            LOAN_INTEREST_RATE         = p_interest_rate,
+            LOAN_LIMIT_PCT             = p_max_loan_pct,
             LOAN_MAX_INSTALMENT_MONTHS = p_max_instalment_months,
-            FLOATING_RATE_TENURE     = p_floating_rate_tenure
+            FLOATING_RATE_TENURE       = p_floating_rate_tenure,
+            LOAN_AVAIL_ALL_EMP         = NVL(p_loan_avail_all_emp, 'Y')
         WHEN NOT MATCHED THEN INSERT (
             COMPANY_ID,
             LOAN_ENABLED,
@@ -996,7 +1001,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_PKG AS
             LOAN_INTEREST_RATE,
             LOAN_LIMIT_PCT,
             LOAN_MAX_INSTALMENT_MONTHS,
-            FLOATING_RATE_TENURE
+            FLOATING_RATE_TENURE,
+            LOAN_AVAIL_ALL_EMP
         ) VALUES (
             p_company_id,
             p_loan_enabled,
@@ -1004,7 +1010,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_PKG AS
             p_interest_rate,
             p_max_loan_pct,
             p_max_instalment_months,
-            p_floating_rate_tenure
+            p_floating_rate_tenure,
+            NVL(p_loan_avail_all_emp, 'Y')
         );
 
         COMMIT;
@@ -1021,9 +1028,6 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_PKG AS
 
     -- ═══════════════════════════════════════════════════════════
     --  SAVE_WITHDRAWAL_SETTINGS
-    --  NOTE: EPF_COMPANY_SETTINGS does not currently have a
-    --  WITHDRAWAL_ENABLED column. This procedure is a no-op stub
-    --  until that column is added to the schema.
     -- ═══════════════════════════════════════════════════════════
     PROCEDURE SAVE_WITHDRAWAL_SETTINGS (
         p_company_id         IN  NUMBER,
@@ -1032,11 +1036,31 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_PKG AS
         p_out_message        OUT VARCHAR2
     ) IS
     BEGIN
-        -- TODO: EPF_COMPANY_SETTINGS needs a WITHDRAWAL_ENABLED column
-        -- before this procedure can be implemented.
-        NULL;
+        p_out_success := 'N';
+
+        MERGE INTO EPF_COMPANY_SETTINGS cs
+        USING (SELECT p_company_id AS CID FROM DUAL) d
+        ON (cs.COMPANY_ID = d.CID)
+        WHEN MATCHED THEN UPDATE SET
+            WITHDRAWAL_ENABLED = p_withdrawal_enabled
+        WHEN NOT MATCHED THEN INSERT (
+            COMPANY_ID,
+            WITHDRAWAL_ENABLED
+        ) VALUES (
+            p_company_id,
+            p_withdrawal_enabled
+        );
+
+        COMMIT;
+
         p_out_success := 'Y';
-        p_out_message := 'Withdrawal settings not yet supported (schema column missing).';
+        p_out_message := 'Withdrawal settings saved successfully.';
+
+    EXCEPTION
+        WHEN OTHERS THEN
+            ROLLBACK;
+            p_out_success := 'N';
+            p_out_message := 'Error saving withdrawal settings: ' || SQLERRM;
     END SAVE_WITHDRAWAL_SETTINGS;
 
     -- ═══════════════════════════════════════════════════════════
