@@ -114,6 +114,11 @@ PROMPT
 PROMPT [19] EPF_PKG_AUTH (consolidated) ...
 @@19_epf_pkg_auth.sql
 
+-- ── Step 20: Application views ───────────────────────────────
+PROMPT
+PROMPT [20] EPF Application Views (EPF_V_USER_COMPANIES etc.) ...
+@@20_epf_views.sql
+
 -- ── Final: Verify everything compiled OK ─────────────────────
 PROMPT
 PROMPT [VERIFY] Running post-install checks ...

@@ -124,7 +124,34 @@ SELECT NAME, TYPE, LINE, POSITION, TEXT
  )
  ORDER BY NAME, TYPE, LINE, POSITION;
 
--- ── 7. REQUEST workflow statuses seeded ──────────────────────
+-- ── 7. Views ──────────────────────────────────────────────────
+PROMPT
+PROMPT [VIEWS]
+SELECT VIEW_NAME,
+       CASE WHEN STATUS = 'VALID' THEN 'OK' ELSE '*** INVALID ***' END AS RESULT
+  FROM USER_VIEWS
+ WHERE VIEW_NAME IN (
+       'EPF_V_USER_COMPANIES',
+       'EPF_V_USER_ROLES'
+ )
+ ORDER BY VIEW_NAME;
+
+-- ── 8. Key sequences ──────────────────────────────────────────
+PROMPT
+PROMPT [SEQUENCES]
+SELECT SEQUENCE_NAME, 'OK' AS RESULT
+  FROM USER_SEQUENCES
+ WHERE SEQUENCE_NAME IN (
+       'ACT_LOG_REF_SEQ',
+       'EPF_CONTRIB_BATCH_SEQ',
+       'EPF_LOAN_REQ_SEQ',
+       'EPF_WD_REQ_SEQ',
+       'EPF_LIEN_REQ_SEQ',
+       'EPF_NOC_REQ_SEQ'
+ )
+ ORDER BY SEQUENCE_NAME;
+
+-- ── 9. REQUEST workflow statuses seeded ──────────────────────
 PROMPT
 PROMPT [REQUEST STATUSES]
 SELECT STATUS_CODE, STATUS_DISPLAY,
