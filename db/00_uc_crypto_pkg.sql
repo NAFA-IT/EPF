@@ -50,6 +50,15 @@ CREATE OR REPLACE PACKAGE BODY uc_crypto AS
   g_seed  RAW(2048);
 
   -- -----------------------------------------------------------------------
+  -- BITOR / BITXOR helpers (Oracle only has built-in BITAND)
+  -- -----------------------------------------------------------------------
+  FUNCTION bitor( a PLS_INTEGER, b PLS_INTEGER ) RETURN PLS_INTEGER IS
+  BEGIN RETURN a + b - BITAND(a, b); END;
+
+  FUNCTION bitxor( a PLS_INTEGER, b PLS_INTEGER ) RETURN PLS_INTEGER IS
+  BEGIN RETURN a + b - 2 * BITAND(a, b); END;
+
+  -- -----------------------------------------------------------------------
   -- Circular left-rotate for SHA-1 / SHA-256
   -- -----------------------------------------------------------------------
   FUNCTION rotl32( x PLS_INTEGER, n PLS_INTEGER ) RETURN PLS_INTEGER IS
