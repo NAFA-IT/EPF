@@ -189,6 +189,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_content  CLOB;
         v_url      VARCHAR2(1000);
         v_err      VARCHAR2(4000);
+        v_mail_id  NUMBER;
     BEGIN
         GET_USER_INFO(p_user_id, v_email, v_name);
         IF v_email IS NULL THEN RETURN; END IF;
@@ -213,7 +214,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_body := BUILD_EMAIL_HTML(v_content);
 
         BEGIN
-            APEX_MAIL.SEND(
+            v_mail_id := APEX_MAIL.SEND(
                 p_to      => v_email,
                 p_from    => 'noreply@alfalahinvestments.com',
                 p_subj    => v_subject,
@@ -246,6 +247,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_content  CLOB;
         v_url      VARCHAR2(1000);
         v_err      VARCHAR2(4000);
+        v_mail_id  NUMBER;
     BEGIN
         GET_USER_INFO(p_user_id, v_email, v_name);
         IF v_email IS NULL THEN RETURN; END IF;
@@ -268,7 +270,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_body := BUILD_EMAIL_HTML(v_content);
 
         BEGIN
-            APEX_MAIL.SEND(
+            v_mail_id := APEX_MAIL.SEND(
                 p_to        => v_email,
                 p_from      => 'noreply@alfalahinvestments.com',
                 p_subj      => v_subject,
@@ -301,6 +303,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_body     CLOB;
         v_content  CLOB;
         v_err      VARCHAR2(4000);
+        v_mail_id  NUMBER;
         v_purpose_label VARCHAR2(100);
     BEGIN
         GET_USER_INFO(p_user_id, v_email, v_name);
@@ -334,7 +337,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_body := BUILD_EMAIL_HTML(v_content);
 
         BEGIN
-            APEX_MAIL.SEND(
+            v_mail_id := APEX_MAIL.SEND(
                 p_to        => v_email,
                 p_from      => 'noreply@alfalahinvestments.com',
                 p_subj      => v_subject,
@@ -367,6 +370,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_body     CLOB;
         v_content  CLOB;
         v_err      VARCHAR2(4000);
+        v_mail_id  NUMBER;
     BEGIN
         GET_USER_INFO(p_user_id, v_email, v_name);
         IF v_email IS NULL THEN RETURN; END IF;
@@ -392,7 +396,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_body := BUILD_EMAIL_HTML(v_content);
 
         BEGIN
-            APEX_MAIL.SEND(
+            v_mail_id := APEX_MAIL.SEND(
                 p_to        => v_email,
                 p_from      => 'noreply@alfalahinvestments.com',
                 p_subj      => v_subject,
@@ -423,6 +427,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_body     CLOB;
         v_content  CLOB;
         v_err      VARCHAR2(4000);
+        v_mail_id  NUMBER;
     BEGIN
         GET_USER_INFO(p_user_id, v_email, v_name);
         IF v_email IS NULL THEN RETURN; END IF;
@@ -446,7 +451,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_body := BUILD_EMAIL_HTML(v_content);
 
         BEGIN
-            APEX_MAIL.SEND(
+            v_mail_id := APEX_MAIL.SEND(
                 p_to        => v_email,
                 p_from      => 'noreply@alfalahinvestments.com',
                 p_subj      => v_subject,
@@ -477,6 +482,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_body     CLOB;
         v_content  CLOB;
         v_err      VARCHAR2(4000);
+        v_mail_id  NUMBER;
     BEGIN
         GET_USER_INFO(p_user_id, v_email, v_name);
         IF v_email IS NULL THEN RETURN; END IF;
@@ -500,7 +506,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_body := BUILD_EMAIL_HTML(v_content);
 
         BEGIN
-            APEX_MAIL.SEND(
+            v_mail_id := APEX_MAIL.SEND(
                 p_to        => v_email,
                 p_from      => 'noreply@alfalahinvestments.com',
                 p_subj      => v_subject,
