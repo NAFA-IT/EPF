@@ -781,8 +781,12 @@ CREATE OR REPLACE PACKAGE BODY EPF_PKG_AUTH AS
   --  ADMIN_BLOCK_USER
   -- ═══════════════════════════════════════════════════════════
   PROCEDURE ADMIN_BLOCK_USER (p_email IN VARCHAR2, p_admin IN VARCHAR2, p_reason IN VARCHAR2) IS
-    l_userid NUMBER := EPF_UTIL.GET_USER_ID(p_email);
+    l_userid NUMBER;
   BEGIN
+    BEGIN
+      SELECT USER_ID INTO l_userid FROM EPF_USERS WHERE EMAIL = p_email AND ROWNUM = 1;
+    EXCEPTION WHEN NO_DATA_FOUND THEN l_userid := NULL;
+    END;
     IF l_userid IS NULL THEN
       RAISE_APPLICATION_ERROR(-20040, 'User not found: ' || p_email);
     END IF;
@@ -805,8 +809,12 @@ CREATE OR REPLACE PACKAGE BODY EPF_PKG_AUTH AS
   --  ADMIN_UNBLOCK_USER
   -- ═══════════════════════════════════════════════════════════
   PROCEDURE ADMIN_UNBLOCK_USER (p_email IN VARCHAR2, p_admin IN VARCHAR2) IS
-    l_userid NUMBER := EPF_UTIL.GET_USER_ID(p_email);
+    l_userid NUMBER;
   BEGIN
+    BEGIN
+      SELECT USER_ID INTO l_userid FROM EPF_USERS WHERE EMAIL = p_email AND ROWNUM = 1;
+    EXCEPTION WHEN NO_DATA_FOUND THEN l_userid := NULL;
+    END;
     IF l_userid IS NULL THEN
       RAISE_APPLICATION_ERROR(-20041, 'User not found: ' || p_email);
     END IF;
