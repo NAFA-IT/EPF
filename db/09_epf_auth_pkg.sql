@@ -513,7 +513,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_AUTH_PKG AS
            SET PASSWORD_HASH      = v_hash,
                PASSWORD_SALT      = v_salt,
                FORCE_PWD_CHANGE   = 'N',
-               FIRST_LOGIN        = NVL(FIRST_LOGIN, SYSDATE)
+               FIRST_LOGIN        = 'N'
          WHERE USER_ID = p_user_id;
         COMMIT;
     END APPLY_NEW_PASSWORD;
