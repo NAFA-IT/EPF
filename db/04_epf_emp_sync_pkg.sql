@@ -28,8 +28,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMP_SYNC_PKG AS
 -- ── Private: hash a password ──────────────────────────────────
 FUNCTION HASH_PASSWORD (p_pwd IN VARCHAR2, p_salt OUT RAW) RETURN RAW IS
 BEGIN
-    p_salt := DBMS_CRYPTO.RANDOMBYTES(32);
-    RETURN DBMS_CRYPTO.HASH(UTL_RAW.CAST_TO_RAW(p_pwd) || p_salt, DBMS_CRYPTO.HASH_SH512);
+    p_salt := UC_CRYPTO.RANDOMBYTES(32);
+    RETURN UC_CRYPTO.HASH(UTL_RAW.CAST_TO_RAW(p_pwd) || p_salt, UC_CRYPTO.HASH_SH512);
 END HASH_PASSWORD;
 
 -- ============================================================

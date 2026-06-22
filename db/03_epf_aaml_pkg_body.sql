@@ -271,10 +271,10 @@ BEGIN
         WHERE USER_ID = v_user_id;
     EXCEPTION WHEN NO_DATA_FOUND THEN
         -- New user
-        v_salt := DBMS_CRYPTO.RANDOMBYTES(32);
-        v_hash := DBMS_CRYPTO.HASH(
+        v_salt := UC_CRYPTO.RANDOMBYTES(32);
+        v_hash := UC_CRYPTO.HASH(
                       UTL_RAW.CAST_TO_RAW(v_pwd) || v_salt,
-                      DBMS_CRYPTO.HASH_SH512);
+                      UC_CRYPTO.HASH_SH512);
         INSERT INTO EPF_USERS
             (FULL_NAME, EMAIL, CNIC, MOBILE_NO, EMPLOYEE_CODE,
              PASSWORD_HASH, PASSWORD_SALT, STATUS_ID,

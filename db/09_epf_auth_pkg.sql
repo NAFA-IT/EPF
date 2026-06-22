@@ -116,14 +116,14 @@ CREATE OR REPLACE PACKAGE BODY EPF_AUTH_PKG AS
         v_input  RAW(32767);
     BEGIN
         v_input := UTL_RAW.CAST_TO_RAW(p_password || p_salt);
-        v_raw   := DBMS_CRYPTO.HASH(v_input, DBMS_CRYPTO.HASH_SH512);
+        v_raw   := UC_CRYPTO.HASH(v_input, UC_CRYPTO.HASH_SH512);
         RETURN RAWTOHEX(v_raw);
     END HASH_PASSWORD;
 
     -- Generate random 32-byte hex salt
     FUNCTION GENERATE_SALT RETURN VARCHAR2 IS
     BEGIN
-        RETURN RAWTOHEX(DBMS_CRYPTO.RANDOMBYTES(32));
+        RETURN RAWTOHEX(UC_CRYPTO.RANDOMBYTES(32));
     END GENERATE_SALT;
 
     -- Generate a 6-digit numeric OTP
@@ -137,7 +137,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_AUTH_PKG AS
     -- Generate a 64-char hex token
     FUNCTION GENERATE_TOKEN RETURN VARCHAR2 IS
     BEGIN
-        RETURN RAWTOHEX(DBMS_CRYPTO.RANDOMBYTES(32));
+        RETURN RAWTOHEX(UC_CRYPTO.RANDOMBYTES(32));
     END GENERATE_TOKEN;
 
     -- Validate password strength (min 8, 1 upper, 1 lower, 1 digit, 1 special)
