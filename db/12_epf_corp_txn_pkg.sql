@@ -1919,7 +1919,7 @@ CREATE OR REPLACE PACKAGE BODY EPF_CORP_TXN_PKG AS
             p_text        => 'Portfolio reallocation group ' || p_group_name
                           || CASE WHEN v_is_new THEN ' created' ELSE ' edited' END
                           || ' by Maker ' || v_maker_name
-                          || CASE WHEN v_has_checker = 'Y' = 'N'
+                          || CASE WHEN v_has_checker = 'N'
                                   THEN ' and saved (no Checker exists)' ELSE '' END,
             p_ref_type    => 'REALLOC',
             p_ref_id      => v_group_id,
