@@ -129,7 +129,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMPLOYEE_PKG AS
     ) IS
     BEGIN
         SELECT f.COMPANY_ID,
-               f.FUND_ID,
+               (SELECT ffm.FUND_ID FROM EPF_FOLIO_FUND_MAPPING ffm
+                 WHERE ffm.FOLIO_ID = f.FOLIO_ID AND ROWNUM = 1),
                f.FOLIO_NUMBER,
                NVL(f.LIEN_MARKED,'N'),
                NVL(f.IS_DISABLED,'N'),
