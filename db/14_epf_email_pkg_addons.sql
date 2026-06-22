@@ -161,8 +161,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
     --  PRIVATE: Standard HTML wrapper for email body
     -- ─────────────────────────────────────────────────────────
     FUNCTION BUILD_EMAIL_HTML (
-        p_content IN CLOB
-    ) RETURN CLOB IS
+        p_content IN VARCHAR2
+    ) RETURN VARCHAR2 IS
     BEGIN
         RETURN
             '<html><body style="margin:0;padding:0;background:#f0f2f5;font-family:Arial,sans-serif;color:#333">'
@@ -241,8 +241,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_email    EPF_USERS.EMAIL%TYPE;
         v_name     EPF_USERS.FULL_NAME%TYPE;
         v_subject  VARCHAR2(500);
-        v_body     CLOB;
-        v_content  CLOB;
+        v_body     VARCHAR2(32767);
+        v_content  VARCHAR2(32767);
         v_url      VARCHAR2(1000);
         v_err      VARCHAR2(4000);
     BEGIN
@@ -268,8 +268,9 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
 
         v_body := BUILD_EMAIL_HTML(v_content);
 
+        DECLARE v_mail_id NUMBER;
         BEGIN
-            APEX_MAIL.SEND(
+            v_mail_id := APEX_MAIL.SEND(
                 p_to      => v_email,
                 p_from    => 'noreply@alfalahinvestments.com',
                 p_subj    => v_subject,
@@ -298,8 +299,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_email    EPF_USERS.EMAIL%TYPE;
         v_name     EPF_USERS.FULL_NAME%TYPE;
         v_subject  VARCHAR2(500);
-        v_body     CLOB;
-        v_content  CLOB;
+        v_body     VARCHAR2(32767);
+        v_content  VARCHAR2(32767);
         v_url      VARCHAR2(1000);
         v_err      VARCHAR2(4000);
     BEGIN
@@ -323,8 +324,9 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
 
         v_body := BUILD_EMAIL_HTML(v_content);
 
+        DECLARE v_mail_id NUMBER;
         BEGIN
-            APEX_MAIL.SEND(
+            v_mail_id := APEX_MAIL.SEND(
                 p_to        => v_email,
                 p_from      => 'noreply@alfalahinvestments.com',
                 p_subj      => v_subject,
@@ -354,8 +356,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_email    EPF_USERS.EMAIL%TYPE;
         v_name     EPF_USERS.FULL_NAME%TYPE;
         v_subject  VARCHAR2(500);
-        v_body     CLOB;
-        v_content  CLOB;
+        v_body     VARCHAR2(32767);
+        v_content  VARCHAR2(32767);
         v_err      VARCHAR2(4000);
         v_purpose_label VARCHAR2(100);
     BEGIN
@@ -389,8 +391,9 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
 
         v_body := BUILD_EMAIL_HTML(v_content);
 
+        DECLARE v_mail_id NUMBER;
         BEGIN
-            APEX_MAIL.SEND(
+            v_mail_id := APEX_MAIL.SEND(
                 p_to        => v_email,
                 p_from      => 'noreply@alfalahinvestments.com',
                 p_subj      => v_subject,
@@ -420,8 +423,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_email    EPF_USERS.EMAIL%TYPE;
         v_name     EPF_USERS.FULL_NAME%TYPE;
         v_subject  VARCHAR2(500);
-        v_body     CLOB;
-        v_content  CLOB;
+        v_body     VARCHAR2(32767);
+        v_content  VARCHAR2(32767);
         v_err      VARCHAR2(4000);
     BEGIN
         GET_USER_INFO(p_user_id, v_email, v_name);
@@ -447,8 +450,9 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
 
         v_body := BUILD_EMAIL_HTML(v_content);
 
+        DECLARE v_mail_id NUMBER;
         BEGIN
-            APEX_MAIL.SEND(
+            v_mail_id := APEX_MAIL.SEND(
                 p_to        => v_email,
                 p_from      => 'noreply@alfalahinvestments.com',
                 p_subj      => v_subject,
@@ -476,8 +480,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_email    EPF_USERS.EMAIL%TYPE;
         v_name     EPF_USERS.FULL_NAME%TYPE;
         v_subject  VARCHAR2(500);
-        v_body     CLOB;
-        v_content  CLOB;
+        v_body     VARCHAR2(32767);
+        v_content  VARCHAR2(32767);
         v_err      VARCHAR2(4000);
     BEGIN
         GET_USER_INFO(p_user_id, v_email, v_name);
@@ -501,8 +505,9 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
 
         v_body := BUILD_EMAIL_HTML(v_content);
 
+        DECLARE v_mail_id NUMBER;
         BEGIN
-            APEX_MAIL.SEND(
+            v_mail_id := APEX_MAIL.SEND(
                 p_to        => v_email,
                 p_from      => 'noreply@alfalahinvestments.com',
                 p_subj      => v_subject,
@@ -530,8 +535,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_email    EPF_USERS.EMAIL%TYPE;
         v_name     EPF_USERS.FULL_NAME%TYPE;
         v_subject  VARCHAR2(500);
-        v_body     CLOB;
-        v_content  CLOB;
+        v_body     VARCHAR2(32767);
+        v_content  VARCHAR2(32767);
         v_err      VARCHAR2(4000);
     BEGIN
         GET_USER_INFO(p_user_id, v_email, v_name);
@@ -555,8 +560,9 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
 
         v_body := BUILD_EMAIL_HTML(v_content);
 
+        DECLARE v_mail_id NUMBER;
         BEGIN
-            APEX_MAIL.SEND(
+            v_mail_id := APEX_MAIL.SEND(
                 p_to        => v_email,
                 p_from      => 'noreply@alfalahinvestments.com',
                 p_subj      => v_subject,
@@ -590,8 +596,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_email    EPF_USERS.EMAIL%TYPE;
         v_name     EPF_USERS.FULL_NAME%TYPE;
         v_subject  VARCHAR2(500);
-        v_body     CLOB;
-        v_content  CLOB;
+        v_body     VARCHAR2(32767);
+        v_content  VARCHAR2(32767);
         v_err      VARCHAR2(4000);
     BEGIN
         GET_USER_INFO(p_user_id, v_email, v_name);
@@ -614,8 +620,9 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
 
         v_body := BUILD_EMAIL_HTML(v_content);
 
+        DECLARE v_mail_id NUMBER;
         BEGIN
-            APEX_MAIL.SEND(
+            v_mail_id := APEX_MAIL.SEND(
                 p_to        => v_email,
                 p_from      => 'noreply@alfalahinvestments.com',
                 p_subj      => v_subject,
@@ -644,8 +651,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_email    EPF_USERS.EMAIL%TYPE;
         v_name     EPF_USERS.FULL_NAME%TYPE;
         v_subject  VARCHAR2(500);
-        v_body     CLOB;
-        v_content  CLOB;
+        v_body     VARCHAR2(32767);
+        v_content  VARCHAR2(32767);
         v_err      VARCHAR2(4000);
         v_ts       VARCHAR2(30);
     BEGIN
@@ -669,8 +676,9 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
 
         v_body := BUILD_EMAIL_HTML(v_content);
 
+        DECLARE v_mail_id NUMBER;
         BEGIN
-            APEX_MAIL.SEND(
+            v_mail_id := APEX_MAIL.SEND(
                 p_to        => v_email,
                 p_from      => 'noreply@alfalahinvestments.com',
                 p_subj      => v_subject,
@@ -704,8 +712,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_email    EPF_USERS.EMAIL%TYPE;
         v_name     EPF_USERS.FULL_NAME%TYPE;
         v_subject  VARCHAR2(500);
-        v_body     CLOB;
-        v_content  CLOB;
+        v_body     VARCHAR2(32767);
+        v_content  VARCHAR2(32767);
         v_err      VARCHAR2(4000);
         v_ts       VARCHAR2(30);
     BEGIN
@@ -739,8 +747,9 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
 
         v_body := BUILD_EMAIL_HTML(v_content);
 
+        DECLARE v_mail_id NUMBER;
         BEGIN
-            APEX_MAIL.SEND(
+            v_mail_id := APEX_MAIL.SEND(
                 p_to        => v_email,
                 p_from      => 'noreply@alfalahinvestments.com',
                 p_subj      => v_subject,
@@ -775,8 +784,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_email    EPF_USERS.EMAIL%TYPE;
         v_name     EPF_USERS.FULL_NAME%TYPE;
         v_subject  VARCHAR2(500);
-        v_body     CLOB;
-        v_content  CLOB;
+        v_body     VARCHAR2(32767);
+        v_content  VARCHAR2(32767);
         v_err      VARCHAR2(4000);
     BEGIN
         GET_USER_INFO(p_approver_user_id, v_email, v_name);
@@ -809,8 +818,9 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
 
         v_body := BUILD_EMAIL_HTML(v_content);
 
+        DECLARE v_mail_id NUMBER;
         BEGIN
-            APEX_MAIL.SEND(
+            v_mail_id := APEX_MAIL.SEND(
                 p_to        => v_email,
                 p_from      => 'noreply@alfalahinvestments.com',
                 p_subj      => v_subject,
@@ -844,8 +854,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_email    EPF_USERS.EMAIL%TYPE;
         v_name     EPF_USERS.FULL_NAME%TYPE;
         v_subject  VARCHAR2(500);
-        v_body     CLOB;
-        v_content  CLOB;
+        v_body     VARCHAR2(32767);
+        v_content  VARCHAR2(32767);
         v_err      VARCHAR2(4000);
         v_ts       VARCHAR2(30);
     BEGIN
@@ -881,8 +891,9 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
 
         v_body := BUILD_EMAIL_HTML(v_content);
 
+        DECLARE v_mail_id NUMBER;
         BEGIN
-            APEX_MAIL.SEND(
+            v_mail_id := APEX_MAIL.SEND(
                 p_to        => v_email,
                 p_from      => 'noreply@alfalahinvestments.com',
                 p_subj      => v_subject,
@@ -918,8 +929,8 @@ CREATE OR REPLACE PACKAGE BODY EPF_EMAIL_PKG AS
         v_email    EPF_USERS.EMAIL%TYPE;
         v_name     EPF_USERS.FULL_NAME%TYPE;
         v_subject  VARCHAR2(500);
-        v_body     CLOB;
-        v_content  CLOB;
+        v_body     VARCHAR2(32767);
+        v_content  VARCHAR2(32767);
         v_err      VARCHAR2(4000);
         v_period   VARCHAR2(100);
         v_mail_id  NUMBER;
