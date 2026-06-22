@@ -291,71 +291,86 @@ SELECT
 --  8. V_EPF_LOAN_REQUESTS
 --  Used by: Corp Maker loan list (404), Checker/Authorizer
 --           pending request pages (501, 601).
+--  Note: EPF_LOAN_REQUESTS links via FOLIO_ID → EPF_FOLIOS →
+--        EPF_USER_COMPANIES → EPF_USERS for employee details.
+--        Actual table columns: LOAN_NO, AMOUNT, INTEREST_RATE,
+--        MONTHLY_INSTALMENT, INTEREST_TYPE, MAKER_UCID.
 -- ─────────────────────────────────────────────────────────────
 CREATE OR REPLACE VIEW V_EPF_LOAN_REQUESTS AS
 SELECT
     lr.loan_id,
-    lr.loan_ref,
+    lr.loan_no                          AS loan_ref,
     lr.company_id,
     c.company_name,
-    lr.employee_id,
-    u.full_name      AS employee_name,
+    uc.user_id                          AS employee_id,
+    u.full_name                         AS employee_name,
     u.employee_code,
-    u.cnic,
-    lr.loan_amount,
-    lr.interest_rate_pct,
+    NVL(u.cnic, fo.cnic)                AS cnic,
+    lr.amount                           AS loan_amount,
+    lr.interest_rate                    AS interest_rate_pct,
     lr.instalment_months,
-    lr.instalment_amount,
-    lr.loan_purpose,
+    lr.monthly_instalment               AS instalment_amount,
+    lr.interest_type                    AS loan_purpose,
     lr.status_id,
-    st.status_code   AS loan_status_code,
-    st.status_label  AS loan_status_label,
-    st.css_class     AS status_css,
+    st.status_code                      AS loan_status_code,
+    st.status_label                     AS loan_status_label,
+    st.css_class                        AS status_css,
     lr.checker_remarks,
-    lr.authorizer_remarks,
-    lr.aaml_remarks,
-    lr.disbursement_date,
-    lr.created_date,
-    lr.created_by
+    NULL                                AS authorizer_remarks,
+    NULL                                AS aaml_remarks,
+    lr.authorized_date                  AS disbursement_date,
+    lr.maker_date                       AS created_date,
+    mu.email                            AS created_by
   FROM epf_loan_requests lr
-  JOIN epf_companies c  ON c.company_id = lr.company_id
-  JOIN epf_users     u  ON u.user_id    = lr.employee_id
-  JOIN epf_statuses  st ON st.status_id = lr.status_id;
+  JOIN epf_companies      c   ON c.company_id      = lr.company_id
+  JOIN epf_folios         fo  ON fo.folio_id        = lr.folio_id
+  JOIN epf_statuses       st  ON st.status_id       = lr.status_id
+  JOIN epf_user_companies uc  ON uc.folio_id        = lr.folio_id
+  JOIN epf_users          u   ON u.user_id          = uc.user_id
+  JOIN epf_user_companies muc ON muc.user_company_id = lr.maker_ucid
+  JOIN epf_users          mu  ON mu.user_id         = muc.user_id;
 /
 
 -- ─────────────────────────────────────────────────────────────
 --  9. V_EPF_WITHDRAWAL_REQUESTS
 --  Used by: Corp Maker withdrawal list (406), Checker/Authorizer
 --           pending request pages (501, 601).
+--  Note: EPF_WITHDRAWAL_REQUESTS links via FOLIO_ID.
+--        Actual table columns: WD_NO, AMOUNT, WD_TYPE, REASON,
+--        MAKER_UCID.
 -- ─────────────────────────────────────────────────────────────
 CREATE OR REPLACE VIEW V_EPF_WITHDRAWAL_REQUESTS AS
 SELECT
-    wr.withdrawal_id,
-    wr.withdrawal_ref,
+    wr.wd_id                            AS withdrawal_id,
+    wr.wd_no                            AS withdrawal_ref,
     wr.company_id,
     c.company_name,
-    wr.employee_id,
-    u.full_name      AS employee_name,
+    uc.user_id                          AS employee_id,
+    u.full_name                         AS employee_name,
     u.employee_code,
-    u.cnic,
-    wr.withdrawal_amount,
-    wr.withdrawal_reason,
-    wr.bank_name,
-    wr.account_title,
-    wr.iban,
+    NVL(u.cnic, fo.cnic)                AS cnic,
+    wr.amount                           AS withdrawal_amount,
+    wr.reason                           AS withdrawal_reason,
+    NULL                                AS bank_name,
+    NULL                                AS account_title,
+    NULL                                AS iban,
     wr.status_id,
-    st.status_code   AS wd_status_code,
-    st.status_label  AS wd_status_label,
-    st.css_class     AS status_css,
+    st.status_code                      AS wd_status_code,
+    st.status_label                     AS wd_status_label,
+    st.css_class                        AS status_css,
     wr.checker_remarks,
-    wr.authorizer_remarks,
-    wr.aaml_remarks,
-    wr.created_date,
-    wr.created_by
+    NULL                                AS authorizer_remarks,
+    NULL                                AS aaml_remarks,
+    wr.maker_date                       AS created_date,
+    mu.email                            AS created_by
   FROM epf_withdrawal_requests wr
-  JOIN epf_companies c  ON c.company_id = wr.company_id
-  JOIN epf_users     u  ON u.user_id    = wr.employee_id
-  JOIN epf_statuses  st ON st.status_id = wr.status_id;
+  JOIN epf_companies      c   ON c.company_id       = wr.company_id
+  JOIN epf_folios         fo  ON fo.folio_id         = wr.folio_id
+  JOIN epf_statuses       st  ON st.status_id        = wr.status_id
+  JOIN epf_user_companies uc  ON uc.folio_id         = wr.folio_id
+  JOIN epf_users          u   ON u.user_id           = uc.user_id
+  JOIN epf_user_companies muc ON muc.user_company_id = wr.maker_ucid
+  JOIN epf_users          mu  ON mu.user_id          = muc.user_id;
 /
 
 -- ============================================================
